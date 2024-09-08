@@ -1,0 +1,2 @@
+export const GOOGLE_SHEETS = 'GOOGLE_SHEETS';
+export const SPREADSHEET_ID = 'SPREADSHEET_ID';

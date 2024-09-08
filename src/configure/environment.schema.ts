@@ -5,4 +5,6 @@ export const EnvSchema = z.object({
   DATABASE_USER: z.string(),
   DATABASE_PASS: z.string(),
   DATABASE_NAME: z.string(),
+  SERVICE_ACCOUNT_CREDENTIALS: z.string(),
+  SPREADSHEET_ID: z.string(),
 });
