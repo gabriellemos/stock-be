@@ -59,4 +59,16 @@ export class SpreadsheetsService {
       }),
     );
   }
+
+  async downloadUpdatedPrices() {
+    const res = await this.sheets.spreadsheets.values.get({
+      spreadsheetId: this.spreadsheetId,
+      range: 'Sheet2',
+    });
+
+    return (res.data.values as string[][]).map(([stock, price]) => ({
+      stock,
+      price: parseFloat(price),
+    }));
+  }
 }
