@@ -1,13 +1,14 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 
 import { StockService } from './stock.service';
+import { StockQueryDto } from './dto/stock-query.dto';
 
 @Controller('stocks')
 export class StockController {
   constructor(private readonly stockService: StockService) {}
 
-  @Get(':ticket')
-  getStock(@Param('ticket') ticket: string) {
-    return this.stockService.getStock(ticket);
+  @Get()
+  findStock(@Query() stockQuery: StockQueryDto) {
+    return this.stockService.findOrRegisterStock(stockQuery);
   }
 }
