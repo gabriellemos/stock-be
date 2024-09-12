@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Model } from 'mongoose';
 
-enum StockStatus {
+export enum StockStatus {
   LOADED = 'loaded',
-  LOADING = 'loading',
+  PENDING = 'pending',
   INVALID = 'invalid',
 }
 
@@ -15,7 +15,7 @@ export class Stock extends Document {
   @Prop({ required: true })
   exchange: string;
 
-  @Prop({ type: String, enum: StockStatus, default: StockStatus.LOADING })
+  @Prop({ type: String, enum: StockStatus, default: StockStatus.PENDING })
   status: StockStatus;
 
   @Prop()

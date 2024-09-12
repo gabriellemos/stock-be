@@ -42,7 +42,8 @@ export class SpreadsheetsService {
     const expectedHeaders = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume'];
 
     if (!queryData || queryData[0] !== ticket) {
-      throw new Error('Data conflict: ticket mismatch');
+      const message = `Data conflict: ticket mismatch. Expected ${ticket}, got ${queryData}`;
+      throw new Error(message);
     } else if (!isEqual(headers, expectedHeaders)) {
       throw new Error('Data conflict: header mismatch');
     }
