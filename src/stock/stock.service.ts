@@ -49,6 +49,7 @@ export class StockService {
           new this.historyItemModel({ ...historyItem, stock }).save();
         },
       );
+      await this.sheetsService.trackStock(fullName);
       stock.status = StockStatus.LOADED;
       stock.save();
       // TODO: Log event: donwload successful

@@ -61,15 +61,28 @@ export class SpreadsheetsService {
     );
   }
 
+  async trackStock(ticket: string) {
+    await this.sheets.spreadsheets.values.append({
+      spreadsheetId: this.spreadsheetId,
+      range: 'Sheet2',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [[ticket, `=GOOGLEFINANCE("${ticket}")`]],
+      },
+    });
+  }
+
   async downloadUpdatedPrices() {
     const res = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.spreadsheetId,
       range: 'Sheet2',
     });
 
-    return (res.data.values as string[][]).map(([stock, price]) => ({
-      stock,
-      price: parseFloat(price),
-    }));
+    return (
+      (res.data.values as string[][])?.map(([stock, price]) => ({
+        stock,
+        price: parseFloat(price),
+      })) ?? []
+    );
   }
 }
