@@ -2,7 +2,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
-import { startOfDay, subDays } from 'date-fns';
+import { startOfDay, endOfDay, subDays } from 'date-fns';
+import { isNaN } from 'lodash';
 
 import { LogService } from 'src/log/log.service';
 import { SpreadsheetsService } from 'src/spreadsheets/spreadsheets.service';
@@ -55,8 +56,8 @@ export class StockService {
         stock.latestDate,
         yesterday,
       );
-      historyPrices.forEach((historyItem) => {
-        new this.historyItemModel({ ...historyItem, stock }).save();
+      historyPrices.forEach(async (historyItem) => {
+        await new this.historyItemModel({ ...historyItem, stock }).save();
       });
       stock.latestDate = historyPrices[historyPrices.length - 1].date;
       stock.save();
@@ -69,6 +70,66 @@ export class StockService {
         error,
       });
       stock.save();
+    } finally {
+      session.endSession();
+    }
+  }
+
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async updateStocks() {
+    const session = await this.connection.startSession();
+    session.startTransaction();
+
+    try {
+      const updatedPrices = await this.sheetsService.downloadUpdatedPrices();
+      updatedPrices.forEach(
+        async ({ stock: stockName, date, ...stockData }) => {
+          if (isNaN(stockData.open)) {
+            // No data available. Skip.
+            return;
+          }
+
+          // Find stock by exchange and ticket. Combination is unique.
+          const [exchange, ticket] = stockName.split(':');
+          const stock = await this.stockModel
+            .findOne({ exchange, ticket })
+            .exec();
+
+          if (!stock) {
+            // Stock not found. Log and skip.
+            this.logService.logError('Stock not found', { stockName });
+            return;
+          }
+
+          // Find history item for given stock and date (end of day, today).
+          const historyItem = await this.historyItemModel
+            .findOne({ stock: stock._id, date: endOfDay(new Date()) })
+            .exec();
+
+          if (historyItem) {
+            // Update existing history item
+            await this.historyItemModel
+              .findOneAndUpdate({ _id: historyItem._id }, stockData)
+              .exec();
+          } else {
+            // Create new history item
+            await new this.historyItemModel({
+              ...stockData,
+              date: endOfDay(date),
+              stock: stock._id,
+            }).save();
+          }
+
+          // Update latest date
+          stock.latestDate = endOfDay(date);
+          stock.save();
+        },
+      );
+
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      this.logService.logError('Error updating stock prices', { error });
     } finally {
       session.endSession();
     }

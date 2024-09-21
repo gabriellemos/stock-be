@@ -66,7 +66,17 @@ export class SpreadsheetsService {
       range: 'Sheet2',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
-        values: [[ticket, `=GOOGLEFINANCE("${ticket}")`]],
+        values: [
+          [
+            ticket,
+            `=TODAY()`,
+            `=INDEX(GOOGLEFINANCE("${ticket}", "open", TODAY()), 2 , 2)`,
+            `=INDEX(GOOGLEFINANCE("${ticket}", "high", TODAY()), 2 , 2)`,
+            `=INDEX(GOOGLEFINANCE("${ticket}", "low", TODAY()), 2 , 2)`,
+            `=INDEX(GOOGLEFINANCE("${ticket}", "close", TODAY()), 2 , 2)`,
+            `=INDEX(GOOGLEFINANCE("${ticket}", "volume", TODAY()), 2 , 2)`,
+          ],
+        ],
       },
     });
   }
@@ -78,10 +88,17 @@ export class SpreadsheetsService {
     });
 
     return (
-      (res.data.values as string[][])?.map(([stock, price]) => ({
-        stock,
-        price: parseFloat(price),
-      })) ?? []
+      (res.data.values as string[][])?.map(
+        ([stock, date, open, high, low, close, volume]) => ({
+          stock,
+          date: new Date(date),
+          open: parseFloat(open),
+          high: parseFloat(high),
+          low: parseFloat(low),
+          close: parseFloat(close),
+          volume: parseInt(volume, 10),
+        }),
+      ) ?? []
     );
   }
 }
