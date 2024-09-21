@@ -1,6 +1,6 @@
 import { IsString } from 'class-validator';
 
-export class StockQueryDto {
+export class TrackStockDto {
   @IsString()
   exchange: string;
 

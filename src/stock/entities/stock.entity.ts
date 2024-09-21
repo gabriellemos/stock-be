@@ -1,12 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Model } from 'mongoose';
 
-export enum StockStatus {
-  LOADED = 'loaded',
-  PENDING = 'pending',
-  INVALID = 'invalid',
-}
-
 @Schema()
 export class Stock extends Document {
   @Prop({ required: true })
@@ -15,11 +9,8 @@ export class Stock extends Document {
   @Prop({ required: true })
   exchange: string;
 
-  @Prop({ type: String, enum: StockStatus, default: StockStatus.PENDING })
-  status: StockStatus;
-
-  @Prop()
-  name: string;
+  @Prop({ default: () => new Date('2000-1-1') })
+  latestDate: Date;
 }
 
 export const StockSchema = SchemaFactory.createForClass(Stock);

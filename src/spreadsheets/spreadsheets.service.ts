@@ -12,14 +12,14 @@ export class SpreadsheetsService {
     @Inject(SPREADSHEET_ID) private spreadsheetId: string,
   ) {}
 
-  private formatSheetDate(date?: string): string {
+  private formatSheetDate(date: Date): string {
     const SHEET_DATE_FORMAT = "'DATE('yyyy, MM, dd')'";
-    return format(date ? new Date(date) : new Date(), SHEET_DATE_FORMAT);
+    return format(date, SHEET_DATE_FORMAT);
   }
 
-  async downloadStockHistory(ticket: string) {
-    const start = this.formatSheetDate('2024-1-1');
-    const today = this.formatSheetDate();
+  async downloadStockHistory(ticket: string, startDate: Date, endDate: Date) {
+    const start = this.formatSheetDate(startDate);
+    const today = this.formatSheetDate(endDate);
 
     await this.sheets.spreadsheets.values.update({
       spreadsheetId: this.spreadsheetId,
@@ -48,7 +48,6 @@ export class SpreadsheetsService {
       throw new Error('Data conflict: header mismatch');
     }
 
-    // handle history and store locally
     return (history as string[][]).map(
       ([date, open, high, low, close, volume]) => ({
         date: new Date(date),
