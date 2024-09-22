@@ -2,7 +2,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model } from 'mongoose';
-import { startOfDay, endOfDay, subDays } from 'date-fns';
+import { startOfDay, endOfDay, subDays, isEqual } from 'date-fns';
 import { isNaN } from 'lodash';
 
 import { LogService } from 'src/log/log.service';
@@ -59,7 +59,14 @@ export class StockService {
       historyPrices.forEach(async (historyItem) => {
         await new this.historyItemModel({ ...historyItem, stock }).save();
       });
-      stock.latestDate = historyPrices[historyPrices.length - 1].date;
+      const lastDayWithData = historyPrices[historyPrices.length - 1].date;
+      if (isEqual(startOfDay(lastDayWithData), startOfDay(yesterday))) {
+        stock.latestDate = lastDayWithData;
+      } else {
+        // This is done to handle the case when the market was closed. When that happens
+        // we don't want to keep downloading the same data over and over again.
+        stock.latestDate = endOfDay(yesterday);
+      }
       stock.save();
       await session.commitTransaction();
       this.logService.logInfo('Stock history downloaded', logInfo);
