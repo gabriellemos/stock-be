@@ -59,7 +59,8 @@ export class StockService {
       historyPrices.forEach(async (historyItem) => {
         await new this.historyItemModel({ ...historyItem, stock }).save();
       });
-      const lastDayWithData = historyPrices[historyPrices.length - 1].date;
+      const lastDayWithData =
+        historyPrices[historyPrices.length - 1]?.date || startOfDay(yesterday);
       if (isEqual(startOfDay(lastDayWithData), startOfDay(yesterday))) {
         stock.latestDate = lastDayWithData;
       } else {

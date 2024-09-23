@@ -45,6 +45,11 @@ export class SpreadsheetsService {
       const message = `Data conflict: ticket mismatch. Expected ${ticket}, got ${queryData}`;
       throw new Error(message);
     } else if (!isEqual(headers, expectedHeaders)) {
+      // Data is not available for requested dates, return an empty array. This
+      // usually on days that the market is closed (weekends and/or hollidays).
+      if (isEqual(headers, ['#N/A'])) {
+        return [];
+      }
       throw new Error('Data conflict: header mismatch');
     }
 
