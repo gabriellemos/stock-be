@@ -74,12 +74,12 @@ export class SpreadsheetsService {
         values: [
           [
             ticket,
-            `=TODAY()`,
-            `=INDEX(GOOGLEFINANCE("${ticket}", "open", TODAY()), 2 , 2)`,
-            `=INDEX(GOOGLEFINANCE("${ticket}", "high", TODAY()), 2 , 2)`,
-            `=INDEX(GOOGLEFINANCE("${ticket}", "low", TODAY()), 2 , 2)`,
-            `=INDEX(GOOGLEFINANCE("${ticket}", "close", TODAY()), 2 , 2)`,
-            `=INDEX(GOOGLEFINANCE("${ticket}", "volume", TODAY()), 2 , 2)`,
+            `=GOOGLEFINANCE("${ticket}", "tradetime")`,
+            `=GOOGLEFINANCE("${ticket}", "priceopen")`,
+            `=GOOGLEFINANCE("${ticket}", "high")`,
+            `=GOOGLEFINANCE("${ticket}", "low")`,
+            `=GOOGLEFINANCE("${ticket}", "price")`,
+            `=GOOGLEFINANCE("${ticket}", "volume")`,
           ],
         ],
       },

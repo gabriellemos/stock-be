@@ -90,49 +90,53 @@ export class StockService {
 
     try {
       const updatedPrices = await this.sheetsService.downloadUpdatedPrices();
-      updatedPrices.forEach(
-        async ({ stock: stockName, date, ...stockData }) => {
-          if (isNaN(stockData.open)) {
-            // No data available. Skip.
-            return;
-          }
+      updatedPrices.forEach(async ({ stock: stockName, ...stockData }) => {
+        const { date } = stockData;
+        if (isNaN(stockData.open)) {
+          // No data available. Skip.
+          return;
+        }
 
-          // Find stock by exchange and ticket. Combination is unique.
-          const [exchange, ticket] = stockName.split(':');
-          const stock = await this.stockModel
-            .findOne({ exchange, ticket })
+        // Find stock by exchange and ticket. Combination is unique.
+        const [exchange, ticket] = stockName.split(':');
+        const stock = await this.stockModel
+          .findOne({ exchange, ticket })
+          .exec();
+
+        if (!stock) {
+          // Stock not found. Log and skip.
+          this.logService.logError('Stock not found', { stockName });
+          return;
+        }
+
+        // Find history item for given stock and date (end of day, today).
+        const historyItem = await this.historyItemModel
+          .findOne({
+            stock: stock._id,
+            date: {
+              $gte: startOfDay(date),
+              $lte: endOfDay(date),
+            },
+          })
+          .exec();
+
+        if (historyItem) {
+          // Update existing history item
+          await this.historyItemModel
+            .findOneAndUpdate({ _id: historyItem._id }, stockData)
             .exec();
+        } else {
+          // Create new history item
+          await new this.historyItemModel({
+            ...stockData,
+            stock: stock._id,
+          }).save();
+        }
 
-          if (!stock) {
-            // Stock not found. Log and skip.
-            this.logService.logError('Stock not found', { stockName });
-            return;
-          }
-
-          // Find history item for given stock and date (end of day, today).
-          const historyItem = await this.historyItemModel
-            .findOne({ stock: stock._id, date: endOfDay(new Date()) })
-            .exec();
-
-          if (historyItem) {
-            // Update existing history item
-            await this.historyItemModel
-              .findOneAndUpdate({ _id: historyItem._id }, stockData)
-              .exec();
-          } else {
-            // Create new history item
-            await new this.historyItemModel({
-              ...stockData,
-              date: endOfDay(date),
-              stock: stock._id,
-            }).save();
-          }
-
-          // Update latest date
-          stock.latestDate = endOfDay(date);
-          stock.save();
-        },
-      );
+        // Update latest date
+        stock.latestDate = date;
+        stock.save();
+      });
 
       await session.commitTransaction();
     } catch (error) {
