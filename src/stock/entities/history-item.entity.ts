@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Model, Schema as MongoSchema } from 'mongoose';
+import { Document, Model, ObjectId, Schema as MongoSchema } from 'mongoose';
 
 import { Stock } from './stock.entity';
 
 @Schema()
-export class HistoryItem extends Document {
+export class HistoryItem extends Document<ObjectId> {
   @Prop()
   date: Date;
 

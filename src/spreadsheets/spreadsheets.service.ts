@@ -107,3 +107,7 @@ export class SpreadsheetsService {
     );
   }
 }
+
+export type HistoryData = Awaited<
+  ReturnType<SpreadsheetsService['downloadStockHistory']>
+>[number];

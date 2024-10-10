@@ -1,12 +1,13 @@
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Connection, Model } from 'mongoose';
+import { Connection, Model, ObjectId } from 'mongoose';
 import { startOfDay, endOfDay, subDays, isEqual } from 'date-fns';
 import { isNaN } from 'lodash';
 
 import { LogService } from 'src/log/log.service';
 import { SpreadsheetsService } from 'src/spreadsheets/spreadsheets.service';
+import type { HistoryData } from 'src/spreadsheets/spreadsheets.service';
 
 import { TrackStockDto } from './dto/track-stock.dto';
 import { HistoryItem } from './entities/history-item.entity';
@@ -32,6 +33,35 @@ export class StockService {
     return new this.stockModel(stockDto).save();
   }
 
+  private async createOrUpdateHistoryItem(
+    stockId: ObjectId,
+    historyData: HistoryData,
+  ) {
+    // Find history item for given stock and date
+    const historyItem = await this.historyItemModel
+      .findOne({
+        stock: stockId,
+        date: {
+          $gte: startOfDay(historyData.date),
+          $lte: endOfDay(historyData.date),
+        },
+      })
+      .exec();
+
+    if (historyItem) {
+      // Update existing history item
+      await this.historyItemModel
+        .findOneAndUpdate({ _id: historyItem._id }, historyData)
+        .exec();
+    } else {
+      // Create new history item
+      await new this.historyItemModel({
+        ...historyData,
+        stock: stockId,
+      }).save();
+    }
+  }
+
   @Cron(CronExpression.EVERY_MINUTE)
   async downloadStockHistory() {
     const yesterday = subDays(new Date(), 1);
@@ -51,13 +81,15 @@ export class StockService {
     this.logService.logInfo('Downloading stock history', logInfo);
 
     try {
+      // Fetch stock history from the spreadsheet (google finance)
       const historyPrices = await this.sheetsService.downloadStockHistory(
         stockName,
         stock.latestDate,
         yesterday,
       );
       historyPrices.forEach(async (historyItem) => {
-        await new this.historyItemModel({ ...historyItem, stock }).save();
+        // Store information about the stock pricing
+        await this.createOrUpdateHistoryItem(stock._id, historyItem);
       });
       const lastDayWithData =
         historyPrices[historyPrices.length - 1]?.date || startOfDay(yesterday);
@@ -84,15 +116,14 @@ export class StockService {
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)
-  async updateStocks() {
+  async updateStocksPrices() {
     const session = await this.connection.startSession();
     session.startTransaction();
 
     try {
       const updatedPrices = await this.sheetsService.downloadUpdatedPrices();
-      updatedPrices.forEach(async ({ stock: stockName, ...stockData }) => {
-        const { date } = stockData;
-        if (isNaN(stockData.open)) {
+      updatedPrices.forEach(async ({ stock: stockName, ...historyItem }) => {
+        if (isNaN(historyItem.open)) {
           // No data available. Skip.
           return;
         }
@@ -109,33 +140,8 @@ export class StockService {
           return;
         }
 
-        // Find history item for given stock and date (end of day, today).
-        const historyItem = await this.historyItemModel
-          .findOne({
-            stock: stock._id,
-            date: {
-              $gte: startOfDay(date),
-              $lte: endOfDay(date),
-            },
-          })
-          .exec();
-
-        if (historyItem) {
-          // Update existing history item
-          await this.historyItemModel
-            .findOneAndUpdate({ _id: historyItem._id }, stockData)
-            .exec();
-        } else {
-          // Create new history item
-          await new this.historyItemModel({
-            ...stockData,
-            stock: stock._id,
-          }).save();
-        }
-
-        // Update latest date
-        stock.latestDate = date;
-        stock.save();
+        // Store information about the stock pricing
+        await this.createOrUpdateHistoryItem(stock._id, historyItem);
       });
 
       await session.commitTransaction();
