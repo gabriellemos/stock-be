@@ -23,6 +23,9 @@ export class Stock extends BaseEntity {
 
   @Field(() => HistoryItem)
   price: HistoryItem;
+
+  @Field(() => [HistoryItem])
+  priceHistory: HistoryItem[];
 }
 
 export const StockSchema = SchemaFactory.createForClass(Stock);

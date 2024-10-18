@@ -2,12 +2,20 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Connection, Model, ObjectId } from 'mongoose';
-import { startOfDay, endOfDay, subDays, isEqual } from 'date-fns';
+import {
+  startOfDay,
+  endOfDay,
+  subDays,
+  subMonths,
+  subYears,
+  isEqual,
+} from 'date-fns';
 import { isNaN } from 'lodash';
 
 import { LogService } from 'src/log/log.service';
 import { SpreadsheetsService } from 'src/spreadsheets/spreadsheets.service';
 import type { HistoryData } from 'src/spreadsheets/spreadsheets.service';
+import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 
 import { TrackStockDto } from './dto/track-stock.dto';
 import { HistoryItem } from './entities/history-item.entity';
@@ -157,6 +165,8 @@ export class StockService {
     return await this.stockModel.findById(id).exec();
   }
 
+  // FIX ME: Doesn't work after mid-night (no value for date). Should return
+  // the latest date with a value (AKA yesterday or friday if on weekend).
   async getUpdatedPriceOf(stock: Stock) {
     return await this.historyItemModel
       .findOne({
@@ -167,5 +177,51 @@ export class StockService {
         },
       })
       .exec();
+  }
+
+  async getPriceHistoryOf(stock: Stock, timeInterval: TimeInterval) {
+    const targetCount = 300;
+    const getStartDate = () => {
+      switch (timeInterval) {
+        case TimeInterval.ONE_MONTH:
+          return startOfDay(subMonths(new Date(), 1));
+        case TimeInterval.ONE_YEAR:
+          return startOfDay(subYears(new Date(), 1));
+        case TimeInterval.FIVE_YEARS:
+          return startOfDay(subYears(new Date(), 5));
+        default:
+          return startOfDay(new Date('2000-1-1'));
+      }
+    };
+
+    const startDate = getStartDate();
+    const historyList = await this.historyItemModel
+      .find({
+        stock: stock._id,
+        date: { $gte: startDate },
+      })
+      .sort({ date: 'asc' })
+      .exec();
+
+    if (historyList.length > targetCount) {
+      // Add the oldest item to the list
+      const truncatedList = [historyList[0]];
+
+      // Calculate the step between the items
+      const totalItemsToSelect = targetCount - 2;
+      const totalIntervals = totalItemsToSelect + 1;
+      const step = Math.floor((historyList.length - 2) / totalIntervals);
+
+      for (let i = 1; i <= totalItemsToSelect; i++) {
+        const index = 1 + i * step;
+        truncatedList.push(historyList[index]);
+      }
+
+      // Add the newest item to the list
+      truncatedList.push(historyList[historyList.length - 1]);
+      return truncatedList;
+    }
+
+    return historyList;
   }
 }

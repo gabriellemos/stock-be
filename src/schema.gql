@@ -8,6 +8,7 @@ type Stock {
   exchange: String!
   latestDate: DateTime!
   price: HistoryItem!
+  priceHistory(period: TimeInterval = "1m"): [HistoryItem!]!
 }
 
 """
@@ -23,6 +24,9 @@ type HistoryItem {
   close: Float!
   volume: Float!
 }
+
+"""1m | 1y | 5y | max"""
+scalar TimeInterval
 
 type Query {
   stock(id: String!): Stock!
