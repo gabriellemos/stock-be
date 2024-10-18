@@ -165,17 +165,10 @@ export class StockService {
     return await this.stockModel.findById(id).exec();
   }
 
-  // FIX ME: Doesn't work after mid-night (no value for date). Should return
-  // the latest date with a value (AKA yesterday or friday if on weekend).
   async getUpdatedPriceOf(stock: Stock) {
     return await this.historyItemModel
-      .findOne({
-        stock: stock._id,
-        date: {
-          $gte: startOfDay(new Date()),
-          $lte: endOfDay(new Date()),
-        },
-      })
+      .findOne({ stock: stock._id })
+      .sort({ date: 'desc' })
       .exec();
   }
 
