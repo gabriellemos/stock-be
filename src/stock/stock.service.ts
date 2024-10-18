@@ -152,4 +152,8 @@ export class StockService {
       session.endSession();
     }
   }
+
+  async findOne(id: string) {
+    return await this.stockModel.findById(id).exec();
+  }
 }

@@ -7,6 +7,7 @@ import { SpreadsheetsModule } from '../spreadsheets/spreadsheets.module';
 import { HistoryItem, HistoryItemSchema } from './entities/history-item.entity';
 import { Stock, StockSchema } from './entities/stock.entity';
 import { StockController } from './stock.controller';
+import { StockResolver } from './stock.resolver';
 import { StockService } from './stock.service';
 
 @Module({
@@ -19,6 +20,6 @@ import { StockService } from './stock.service';
     ]),
   ],
   controllers: [StockController],
-  providers: [StockService],
+  providers: [StockResolver, StockService],
 })
 export class StockModule {}

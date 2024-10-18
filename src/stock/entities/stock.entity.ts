@@ -1,14 +1,21 @@
+import { Field, ObjectType, GraphQLISODateTime } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Model, ObjectId } from 'mongoose';
+import { Model } from 'mongoose';
+
+import { BaseEntity } from 'src/common/entities/base.entity';
 
 @Schema()
-export class Stock extends Document<ObjectId> {
+@ObjectType()
+export class Stock extends BaseEntity {
+  @Field()
   @Prop({ required: true })
   ticket: string;
 
+  @Field()
   @Prop({ required: true })
   exchange: string;
 
+  @Field(() => GraphQLISODateTime)
   @Prop({ default: () => new Date('2000-1-1') })
   latestDate: Date;
 }
