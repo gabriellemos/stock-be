@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { google } from 'googleapis';
-import * as path from 'path';
+import { join } from 'node:path';
 
 export type Sheets = ReturnType<typeof google.sheets>;
 
 @Injectable()
 export class GoogleSheetsFactory {
   async create(): Promise<Sheets> {
-    const credentialsPath = path.join(
+    const credentialsPath = join(
       process.cwd(),
       process.env.SERVICE_ACCOUNT_CREDENTIALS,
     );

@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { join } from 'node:path';
 
 import { databaseConfig } from './environment.config';
 import { EnvSchema } from './environment.schema';
@@ -13,6 +16,10 @@ import { EnvSchema } from './environment.schema';
     ConfigModule.forFeature(databaseConfig),
     MongooseModule.forRootAsync({
       useFactory: databaseConfig,
+    }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
     }),
   ],
 })
