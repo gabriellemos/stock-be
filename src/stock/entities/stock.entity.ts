@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 
 import { BaseEntity } from 'src/common/entities/base.entity';
 
+import { HistoryItem } from './history-item.entity';
+
 @Schema()
 @ObjectType()
 export class Stock extends BaseEntity {
@@ -18,6 +20,9 @@ export class Stock extends BaseEntity {
   @Field(() => GraphQLISODateTime)
   @Prop({ default: () => new Date('2000-1-1') })
   latestDate: Date;
+
+  @Field(() => HistoryItem)
+  price: HistoryItem;
 }
 
 export const StockSchema = SchemaFactory.createForClass(Stock);

@@ -156,4 +156,16 @@ export class StockService {
   async findOne(id: string) {
     return await this.stockModel.findById(id).exec();
   }
+
+  async getUpdatedPriceOf(stock: Stock) {
+    return await this.historyItemModel
+      .findOne({
+        stock: stock._id,
+        date: {
+          $gte: startOfDay(new Date()),
+          $lte: endOfDay(new Date()),
+        },
+      })
+      .exec();
+  }
 }

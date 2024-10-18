@@ -7,12 +7,22 @@ type Stock {
   ticket: String!
   exchange: String!
   latestDate: DateTime!
+  price: HistoryItem!
 }
 
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+type HistoryItem {
+  date: DateTime!
+  open: Float!
+  high: Float!
+  low: Float!
+  close: Float!
+  volume: Float!
+}
 
 type Query {
   stock(id: String!): Stock!
