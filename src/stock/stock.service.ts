@@ -17,7 +17,7 @@ import { SpreadsheetsService } from 'src/spreadsheets/spreadsheets.service';
 import type { HistoryData } from 'src/spreadsheets/spreadsheets.service';
 import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 
-import { TrackStockDto } from './dto/track-stock.dto';
+import { TrackStockInput } from './dto/track-stock.input';
 import { HistoryItem } from './entities/history-item.entity';
 import { Stock } from './entities/stock.entity';
 
@@ -31,7 +31,7 @@ export class StockService {
     @InjectModel(Stock.name) private stockModel: Model<Stock>,
   ) {}
 
-  async trackStock(stockDto: TrackStockDto) {
+  async trackStock(stockDto: TrackStockInput) {
     const stockName = `${stockDto.exchange}:${stockDto.ticket}`;
     if (!!(await this.stockModel.findOne({ ...stockDto }).exec())) {
       throw new BadRequestException(`Stock already tracked: ${stockName}`);

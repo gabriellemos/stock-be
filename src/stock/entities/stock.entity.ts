@@ -21,8 +21,8 @@ export class Stock extends BaseEntity {
   @Prop({ default: () => new Date('2000-1-1') })
   latestDate: Date;
 
-  @Field(() => HistoryItem)
-  price: HistoryItem;
+  @Field(() => HistoryItem, { nullable: true })
+  price?: HistoryItem;
 
   @Field(() => [HistoryItem])
   priceHistory: HistoryItem[];

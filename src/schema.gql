@@ -7,7 +7,7 @@ type Stock {
   ticket: String!
   exchange: String!
   latestDate: DateTime!
-  price: HistoryItem!
+  price: HistoryItem
   priceHistory(period: TimeInterval = "1m"): [HistoryItem!]!
 }
 
@@ -30,4 +30,13 @@ scalar TimeInterval
 
 type Query {
   stock(id: String!): Stock!
+}
+
+type Mutation {
+  trackStock(input: TrackStockInput!): Stock!
+}
+
+input TrackStockInput {
+  exchange: String!
+  ticket: String!
 }
