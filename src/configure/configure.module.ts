@@ -9,10 +9,18 @@ import { join } from 'node:path';
 import { databaseConfig } from './environment.config';
 import { EnvSchema } from './environment.schema';
 
+const getEnvFilePath = () => {
+  const isTestEnvironment = process.env.NODE_ENV === 'test';
+  return isTestEnvironment ? '.env.test.local' : '.env';
+};
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    ConfigModule.forRoot({ validate: EnvSchema.parse }),
+    ConfigModule.forRoot({
+      envFilePath: getEnvFilePath(),
+      validate: EnvSchema.parse,
+    }),
     ConfigModule.forFeature(databaseConfig),
     MongooseModule.forRootAsync({
       useFactory: databaseConfig,

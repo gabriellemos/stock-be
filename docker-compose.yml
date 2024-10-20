@@ -25,3 +25,13 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://root:1234abcd56@mongo-db:27017
       # ME_CONFIG_BASICAUTH_USERNAME: admin <= default value
       # ME_CONFIG_BASICAUTH_PASSWORD: pass  <= default value
+
+  e2e-mongo-db:
+    image: mongo
+    restart: always
+    ports:
+      - 27018:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 1234abcd56
+      MONGODB_DATABASE: stock-controll
