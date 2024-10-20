@@ -5,7 +5,7 @@ import { Model } from 'mongoose';
 import { BaseEntity } from 'src/common/entities/base.entity';
 
 import { HistoryItem } from './history-item.entity';
-import { PriceItem } from '../dto/price-item.response';
+import { PaginatedPrice } from '../dto/paginated-price.response';
 
 @Schema()
 @ObjectType()
@@ -28,8 +28,8 @@ export class Stock extends BaseEntity {
   @Field(() => [HistoryItem])
   priceHistory: HistoryItem[];
 
-  @Field(() => [PriceItem])
-  prices: PriceItem[];
+  @Field(() => PaginatedPrice)
+  prices: PaginatedPrice;
 }
 
 export const StockSchema = SchemaFactory.createForClass(Stock);

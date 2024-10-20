@@ -2,6 +2,7 @@ import {
   Args,
   Mutation,
   Parent,
+  GraphQLISODateTime,
   Query,
   ResolveField,
   Resolver,
@@ -12,7 +13,7 @@ import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 
 import { Stock } from './entities/stock.entity';
 import { HistoryItem } from './entities/history-item.entity';
-import { PriceItem } from './dto/price-item.response';
+import { PaginatedPrice } from './dto/paginated-price.response';
 import { TrackStockInput } from './dto/track-stock.input';
 import { StockService } from './stock.service';
 
@@ -35,7 +36,7 @@ export class StockResolver {
     return await this.stockService.getUpdatedPriceOf(stock);
   }
 
-  @ResolveField(() => [PriceItem])
+  @ResolveField(() => PaginatedPrice)
   async prices(
     @Parent() stock: Stock,
     @Args('groupBy', {
@@ -44,12 +45,12 @@ export class StockResolver {
       defaultValue: GroupInterval.DAY,
     })
     groupBy?: GroupInterval,
+    @Args('cursor', { type: () => GraphQLISODateTime, nullable: true })
+    cursor?: Date,
     @Args('limit', { type: () => Number, nullable: true, defaultValue: 20 })
     limit?: number,
-    @Args('page', { type: () => Number, nullable: true, defaultValue: 1 })
-    page?: number,
   ) {
-    return await this.stockService.getPricesOf(stock, groupBy, limit, page);
+    return await this.stockService.getPricesOf(stock, groupBy, cursor, limit);
   }
 
   @ResolveField(() => [HistoryItem])

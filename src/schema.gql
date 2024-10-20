@@ -2,6 +2,11 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
 type TimePeriod {
   from: DateTime!
   to: DateTime!
@@ -12,13 +17,23 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type PriceItem {
+type StockPrice {
   period: TimePeriod!
   open: Float!
   high: Float!
   low: Float!
   close: Float!
   volume: Float!
+}
+
+type StockPriceEdge {
+  cursor: String!
+  node: StockPrice!
+}
+
+type PaginatedPrice {
+  edges: [StockPriceEdge!]
+  pageInfo: PageInfo!
 }
 
 type Stock {
@@ -28,7 +43,7 @@ type Stock {
   latestDate: DateTime!
   price: HistoryItem
   priceHistory(period: TimeInterval = "1m"): [HistoryItem!]!
-  prices(groupBy: GroupInterval = "day", limit: Float = 20, page: Float = 1): [PriceItem!]!
+  prices(groupBy: GroupInterval = "day", cursor: DateTime, limit: Float = 20): PaginatedPrice!
 }
 
 type HistoryItem {

@@ -19,6 +19,7 @@ import { GroupInterval } from 'src/common/scalars/group-interval.scalar';
 import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 
 import * as PricesUtils from './utils/prices.utils';
+import { PaginatedPrice, StockPrice } from './dto/paginated-price.response';
 import { TrackStockInput } from './dto/track-stock.input';
 import { HistoryItem } from './entities/history-item.entity';
 import { Stock } from './entities/stock.entity';
@@ -177,10 +178,10 @@ export class StockService {
   async getPricesOf(
     stock: Stock,
     groupInterval: GroupInterval,
+    cursor: Date,
     limit: number,
-    page: number,
-  ) {
-    return await this.historyItemModel
+  ): Promise<PaginatedPrice> {
+    const result: StockPrice[] = await this.historyItemModel
       .aggregate([
         { $match: { stock: stock._id } },
         // Sometimes the documents are not sorted properly
@@ -189,10 +190,28 @@ export class StockService {
         { $project: PricesUtils.generateProject() },
         // Sort documents after grouping to ensure correct pagination
         { $sort: PricesUtils.generateSortFor(groupInterval) },
-        { $skip: (page - 1) * limit },
-        { $limit: limit },
+        ...PricesUtils.generatePagination(cursor, limit + 1),
       ])
       .exec();
+
+    // We're using limit + 1 to know if there is more data to fetch.
+    // This is a hacky way to know if there is more data ;)
+    const hasMoreElements = result.length === limit + 1;
+    if (hasMoreElements) {
+      // Remove hacky element
+      result.pop();
+    }
+
+    return {
+      edges: result.map((price) => ({
+        cursor: price.period.from.toISOString(),
+        node: price,
+      })),
+      pageInfo: {
+        hasNextPage: hasMoreElements,
+        endCursor: result[result.length - 1]?.period.from.toISOString(),
+      },
+    };
   }
 
   async getPriceHistoryOf(stock: Stock, timeInterval: TimeInterval) {

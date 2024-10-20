@@ -87,3 +87,10 @@ export const generateSortFor = (
 ): PipelineStage.Sort['$sort'] => {
   return SORT_MAPPING[interval];
 };
+
+export const generatePagination = (cursor: Date, limit: number) => {
+  return [
+    cursor && { $match: { 'period.from': { $lt: cursor } } },
+    { $limit: limit },
+  ].filter(Boolean);
+};

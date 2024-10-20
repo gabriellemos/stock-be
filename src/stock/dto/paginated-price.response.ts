@@ -1,5 +1,7 @@
 import { Field, ObjectType, GraphQLISODateTime } from '@nestjs/graphql';
 
+import { Paginated } from 'src/common/dto/paginated.response';
+
 @ObjectType()
 class TimePeriod {
   @Field(() => GraphQLISODateTime)
@@ -10,7 +12,7 @@ class TimePeriod {
 }
 
 @ObjectType()
-export class PriceItem {
+export class StockPrice {
   @Field(() => TimePeriod)
   period: TimePeriod;
 
@@ -29,3 +31,6 @@ export class PriceItem {
   @Field()
   volume: number;
 }
+
+@ObjectType()
+export class PaginatedPrice extends Paginated(StockPrice) {}
