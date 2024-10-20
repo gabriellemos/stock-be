@@ -15,8 +15,10 @@ import { isNaN } from 'lodash';
 import { LogService } from 'src/log/log.service';
 import { SpreadsheetsService } from 'src/spreadsheets/spreadsheets.service';
 import type { HistoryData } from 'src/spreadsheets/spreadsheets.service';
+import { GroupInterval } from 'src/common/scalars/group-interval.scalar';
 import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 
+import * as PricesUtils from './utils/prices.utils';
 import { TrackStockInput } from './dto/track-stock.input';
 import { HistoryItem } from './entities/history-item.entity';
 import { Stock } from './entities/stock.entity';
@@ -169,6 +171,27 @@ export class StockService {
     return await this.historyItemModel
       .findOne({ stock: stock._id })
       .sort({ date: 'desc' })
+      .exec();
+  }
+
+  async getPricesOf(
+    stock: Stock,
+    groupInterval: GroupInterval,
+    limit: number,
+    page: number,
+  ) {
+    return await this.historyItemModel
+      .aggregate([
+        { $match: { stock: stock._id } },
+        // Sometimes the documents are not sorted properly
+        { $sort: { date: 1 } },
+        { $group: PricesUtils.generateGroupFor(groupInterval) },
+        { $project: PricesUtils.generateProject() },
+        // Sort documents after grouping to ensure correct pagination
+        { $sort: PricesUtils.generateSortFor(groupInterval) },
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+      ])
       .exec();
   }
 
