@@ -1,8 +1,9 @@
 import {
   Args,
+  GraphQLISODateTime,
+  ID,
   Mutation,
   Parent,
-  GraphQLISODateTime,
   Query,
   ResolveField,
   Resolver,
@@ -22,8 +23,14 @@ export class StockResolver {
   constructor(private readonly stockService: StockService) {}
 
   @Query(() => Stock, { name: 'stock' })
-  async findOne(@Args('id') id: string) {
-    return this.stockService.findOne(id);
+  async findOne(@Args('id', { type: () => ID }) id: string) {
+    const stock = await this.stockService.findOne(id);
+
+    if (!stock) {
+      throw new Error(`Stock with id ${id} not found`);
+    }
+
+    return stock;
   }
 
   @Mutation(() => Stock)

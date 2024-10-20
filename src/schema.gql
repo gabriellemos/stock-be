@@ -62,7 +62,7 @@ scalar GroupInterval
 scalar TimeInterval
 
 type Query {
-  stock(id: String!): Stock!
+  stock(id: ID!): Stock!
 }
 
 type Mutation {
