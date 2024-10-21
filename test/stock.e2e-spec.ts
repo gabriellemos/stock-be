@@ -7,8 +7,8 @@ import { StockModule } from 'src/stock/stock.module';
 
 import Consts from 'test/utils/conts';
 import { gqlRequest } from 'test/utils';
-import { mockedLogModule } from 'test/utils/mocked-log.module';
-import { mockedSpreadsheetsModule } from 'test/utils/mocked-spreadsheets.module';
+import { mockedLogModule } from 'test/mocks/mocked-log.module';
+import { mockedSpreadsheetsModule } from 'test/mocks/mocked-spreadsheets.module';
 
 describe('StockModule (e2e)', () => {
   let app: INestApplication;
