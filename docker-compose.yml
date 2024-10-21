@@ -10,7 +10,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: 1234abcd56
-      MONGODB_DATABASE: stock-controll
+      MONGO_INITDB_DATABASE: stock-controll
 
   mongo-express:
     image: mongo-express
@@ -34,4 +34,18 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: 1234abcd56
-      MONGODB_DATABASE: stock-controll
+      MONGO_INITDB_DATABASE: stock-controll
+    volumes:
+      - ./test/mongo-seed:/docker-entrypoint-initdb.d/
+
+  # e2e-mongo-express:
+  #   image: mongo-express
+  #   restart: always
+  #   depends_on:
+  #     - e2e-mongo-db
+  #   ports:
+  #     - 8082:8081
+  #   environment:
+  #     ME_CONFIG_MONGODB_ADMINUSERNAME: root
+  #     ME_CONFIG_MONGODB_ADMINPASSWORD: 1234abcd56
+  #     ME_CONFIG_MONGODB_URL: mongodb://root:1234abcd56@e2e-mongo-db:27017

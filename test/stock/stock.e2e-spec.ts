@@ -5,6 +5,7 @@ import { CommonModule } from 'src/common/common.module';
 import { ConfigureModule } from 'src/configure/configure.module';
 import { StockModule } from 'src/stock/stock.module';
 
+import Consts from 'test/utils/conts';
 import { gqlRequest } from 'test/utils';
 import { mockedLogModule } from 'test/utils/mocked-log.module';
 import { mockedSpreadsheetsModule } from 'test/utils/mocked-spreadsheets.module';
@@ -37,14 +38,29 @@ describe('StockModule (e2e)', () => {
       }
     `;
 
-    it.todo('returns stock by id');
-    it('throws error if stock not found', async () => {
+    it('returns stock by id', async () => {
       const response = await gqlRequest(app, queryStock, {
-        id: '670748530b188ce295c22928',
+        id: Consts.ALZR11_ID,
       });
 
       expect(response.status).toBe(200);
-      console.log('===== response.body', response.body);
+      expect(response.body).toStrictEqual({
+        data: {
+          stock: {
+            _id: Consts.ALZR11_ID,
+            ticket: 'ALZR11',
+            exchange: 'BVMF',
+          },
+        },
+      });
+    });
+
+    it('throws error if stock not found', async () => {
+      const response = await gqlRequest(app, queryStock, {
+        id: '670748530b188ce295c22928', // unexisting id
+      });
+
+      expect(response.status).toBe(200);
       expect(response.body).toStrictEqual({
         errors: [
           expect.objectContaining({
