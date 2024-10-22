@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { startOfDay } from 'date-fns';
 
 import { CommonModule } from 'src/common/common.module';
 import { ConfigureModule } from 'src/configure/configure.module';
@@ -72,9 +73,54 @@ describe('StockModule (e2e)', () => {
     });
 
     describe('price resolver', () => {
-      it.todo('returns todays price');
-      it.todo('returns yesterdays price if market is closed');
-      it.todo('returns null if stock has no price history');
+      const queryStock = `
+        query QueryStock($id: ID!) {
+          stock(id: $id) {
+            _id
+            price {
+              date
+              open
+              high
+              low
+              close
+              volume
+            }
+          }
+        }
+      `;
+
+      it('returns last known price', async () => {
+        const response = await gqlRequest(app, queryStock, {
+          id: Consts.ALZR11_ID,
+        });
+
+        const { price } = response.body.data.stock;
+        expect(response.status).toBe(200);
+        expect(price).toStrictEqual({
+          date: expect.any(String),
+          open: expect.any(Number),
+          high: expect.any(Number),
+          low: expect.any(Number),
+          close: expect.any(Number),
+          volume: expect.any(Number),
+        });
+        expect(startOfDay(new Date(price.date)).getTime()).toBeLessThan(
+          startOfDay(new Date()).getTime(),
+        );
+      });
+
+      it('returns null if stock has no price history', async () => {
+        // Based on the seed provided, KNCR11 has no price history
+        const response = await gqlRequest(app, queryStock, {
+          id: Consts.KNCR11_ID,
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body.data.stock).toStrictEqual({
+          _id: Consts.KNCR11_ID,
+          price: null,
+        });
+      });
     });
 
     describe('price history resolver', () => {
