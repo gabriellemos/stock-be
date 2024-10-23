@@ -225,7 +225,7 @@ export class StockService {
         case TimeInterval.FIVE_YEARS:
           return startOfDay(subYears(new Date(), 5));
         default:
-          return startOfDay(new Date('2000-1-1'));
+          return startOfDay(new Date(0));
       }
     };
 

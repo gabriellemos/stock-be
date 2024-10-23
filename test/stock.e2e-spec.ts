@@ -1,10 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { startOfDay } from 'date-fns';
+import { startOfDay, subMonths, subYears } from 'date-fns';
+import MockDate from 'mockdate';
 
 import { CommonModule } from 'src/common/common.module';
 import { ConfigureModule } from 'src/configure/configure.module';
 import { StockModule } from 'src/stock/stock.module';
+import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 
 import Consts from 'test/utils/conts';
 import { gqlRequest } from 'test/utils';
@@ -73,7 +75,7 @@ describe('StockModule (e2e)', () => {
     });
 
     describe('price resolver', () => {
-      const queryStock = `
+      const queryStockPrice = `
         query QueryStock($id: ID!) {
           stock(id: $id) {
             _id
@@ -90,7 +92,7 @@ describe('StockModule (e2e)', () => {
       `;
 
       it('returns last known price', async () => {
-        const response = await gqlRequest(app, queryStock, {
+        const response = await gqlRequest(app, queryStockPrice, {
           id: Consts.ALZR11_ID,
         });
 
@@ -111,7 +113,7 @@ describe('StockModule (e2e)', () => {
 
       it('returns null if stock has no price history', async () => {
         // Based on the seed provided, KNCR11 has no price history
-        const response = await gqlRequest(app, queryStock, {
+        const response = await gqlRequest(app, queryStockPrice, {
           id: Consts.KNCR11_ID,
         });
 
@@ -124,7 +126,62 @@ describe('StockModule (e2e)', () => {
     });
 
     describe('price history resolver', () => {
-      it.todo('returns prices in given period');
+      const queryStockPriceHistory = `
+        query QueryStock($id: ID!, $period: TimeInterval) {
+          stock(id: $id) {
+            _id
+            priceHistory(period: $period) {
+              date
+              open
+              high
+              low
+              close
+              volume
+            }
+          }
+        }
+      `;
+
+      describe('returns prices in given period', () => {
+        const mockedDate = startOfDay(new Date('2024-10-21T19:56:00Z'));
+
+        beforeEach(() => {
+          MockDate.set(mockedDate);
+        });
+
+        afterEach(() => {
+          MockDate.reset();
+        });
+
+        it.each([
+          { period: TimeInterval.ONE_MONTH, date: subMonths(mockedDate, 1) },
+          { period: TimeInterval.ONE_YEAR, date: subYears(mockedDate, 1) },
+          { period: TimeInterval.FIVE_YEARS, date: subYears(mockedDate, 5) },
+          { period: TimeInterval.MAX, date: new Date(0) },
+        ])('$period', async ({ period, date }) => {
+          const response = await gqlRequest(app, queryStockPriceHistory, {
+            id: Consts.HGLG11_ID,
+            period,
+          });
+
+          expect(response.status).toBe(200);
+          const { priceHistory } = response.body.data.stock;
+          expect(priceHistory).not.toHaveLength(0);
+
+          priceHistory.forEach((price, index) => {
+            // Check if date is within given interval (one month)
+            expect(date.getTime()).toBeLessThan(new Date(price.date).getTime());
+            if (index > 0) {
+              // Check if price history is ordered (oldest first)
+              const previous = priceHistory[index - 1];
+              expect(new Date(previous.date).getTime()).toBeLessThan(
+                new Date(price.date).getTime(),
+              );
+            }
+          });
+        });
+      });
+
       it.todo('returns all matching records if bellow limit');
       describe('returns a sample from the list when the limit is reached', () => {
         it.todo('includes the earliest record');
