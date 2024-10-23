@@ -126,6 +126,7 @@ describe('StockModule (e2e)', () => {
     });
 
     describe('price history resolver', () => {
+      const mockedDate = startOfDay(new Date('2024-10-21T19:56:00Z'));
       const queryStockPriceHistory = `
         query QueryStock($id: ID!, $period: TimeInterval) {
           stock(id: $id) {
@@ -142,17 +143,15 @@ describe('StockModule (e2e)', () => {
         }
       `;
 
+      beforeEach(() => {
+        MockDate.set(mockedDate);
+      });
+
+      afterEach(() => {
+        MockDate.reset();
+      });
+
       describe('returns prices in given period', () => {
-        const mockedDate = startOfDay(new Date('2024-10-21T19:56:00Z'));
-
-        beforeEach(() => {
-          MockDate.set(mockedDate);
-        });
-
-        afterEach(() => {
-          MockDate.reset();
-        });
-
         it.each([
           { period: TimeInterval.ONE_MONTH, date: subMonths(mockedDate, 1) },
           { period: TimeInterval.ONE_YEAR, date: subYears(mockedDate, 1) },
@@ -182,10 +181,57 @@ describe('StockModule (e2e)', () => {
         });
       });
 
-      it.todo('returns all matching records if bellow limit');
+      it('returns at most 300 items', async () => {
+        // Based on the seed, HGLG11 has data starting at 2011-04-19 totaling 3205 records.
+        const response = await gqlRequest(app, queryStockPriceHistory, {
+          id: Consts.HGLG11_ID,
+          period: TimeInterval.ONE_MONTH,
+        });
+
+        expect(response.status).toBe(200);
+        const { priceHistory } = response.body.data.stock;
+        expect(priceHistory).not.toHaveLength(300);
+      });
+
       describe('returns a sample from the list when the limit is reached', () => {
-        it.todo('includes the earliest record');
-        it.todo('includes the oldest record');
+        it('includes the earliest record', async () => {
+          const response = await gqlRequest(app, queryStockPriceHistory, {
+            id: Consts.HGLG11_ID,
+            period: TimeInterval.ONE_MONTH,
+          });
+
+          expect(response.status).toBe(200);
+          const { priceHistory } = response.body.data.stock;
+          expect(priceHistory).not.toHaveLength(0);
+
+          // Most recent date stored in the seed is 2024-10-18 (friday)
+          const expectedDate = new Date('2024-10-18T19:56:00Z');
+          const { date } = priceHistory[priceHistory.length - 1];
+          const dateToCheck = startOfDay(new Date(date));
+
+          expect(dateToCheck.getTime()).toBe(
+            startOfDay(expectedDate).getTime(),
+          );
+        });
+
+        it('includes the oldest record', async () => {
+          const response = await gqlRequest(app, queryStockPriceHistory, {
+            id: Consts.HGLG11_ID,
+            period: TimeInterval.ONE_MONTH,
+          });
+
+          expect(response.status).toBe(200);
+          const { priceHistory } = response.body.data.stock;
+          expect(priceHistory).not.toHaveLength(0);
+
+          const { date } = priceHistory[0];
+          const dateToCheck = startOfDay(new Date(date));
+          const expectedDate = new Date('2024-09-23T19:56:00Z');
+
+          expect(dateToCheck.getTime()).toBe(
+            startOfDay(expectedDate).getTime(),
+          );
+        });
       });
     });
 
