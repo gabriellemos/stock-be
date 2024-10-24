@@ -1,12 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { startOfDay, subMonths, subYears } from 'date-fns';
+import {
+  startOfDay,
+  subMonths,
+  subYears,
+  differenceInDays,
+  differenceInWeeks,
+  differenceInMonths,
+  differenceInYears,
+} from 'date-fns';
+import { intersection } from 'lodash';
 import MockDate from 'mockdate';
 
 import { CommonModule } from 'src/common/common.module';
 import { ConfigureModule } from 'src/configure/configure.module';
 import { StockModule } from 'src/stock/stock.module';
 import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
+import { GroupInterval } from 'src/common/scalars/group-interval.scalar';
 
 import Consts from 'test/utils/conts';
 import { gqlRequest } from 'test/utils';
@@ -236,13 +246,113 @@ describe('StockModule (e2e)', () => {
     });
 
     describe('prices resolver', () => {
-      it.todo('groups prices by day');
-      it.todo('groups prices by week');
-      it.todo('groups prices by month');
-      it.todo('groups prices by trimester');
-      it.todo('groups prices by semester');
-      it.todo('groups prices by year');
-      it.todo('paginates results');
+      const queryStockPriceHistory = `
+        query QueryStock($id: ID!, $cursor: DateTime, $groupBy: GroupInterval) {
+          stock(id: $id) {
+            _id
+            prices(groupBy: $groupBy, cursor: $cursor, limit: 5) {
+              edges {
+                cursor
+                node {
+                  period {
+                    from
+                    to
+                  }
+                  open
+                  high
+                  low
+                  close
+                  volume
+                }
+              }
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+            }
+          }
+        }
+      `;
+
+      describe('groups prices by ', () => {
+        it.each([
+          {
+            groupBy: GroupInterval.DAY,
+            measureWith: differenceInDays,
+            expectedValue: 0,
+          },
+          {
+            groupBy: GroupInterval.WEEK,
+            measureWith: differenceInWeeks,
+            expectedValue: 0,
+          },
+          {
+            groupBy: GroupInterval.MONTH,
+            measureWith: differenceInMonths,
+            expectedValue: 0,
+          },
+          {
+            cursor: '2024-10-01T19:56:00.000Z',
+            groupBy: GroupInterval.TRIMESTER,
+            measureWith: differenceInMonths,
+            expectedValue: 2,
+          },
+          {
+            cursor: '2024-07-01T19:56:00.000Z',
+            groupBy: GroupInterval.SEMESTER,
+            measureWith: differenceInMonths,
+            expectedValue: 5,
+          },
+          {
+            groupBy: GroupInterval.YEAR,
+            measureWith: differenceInYears,
+            expectedValue: 0,
+          },
+        ])(
+          '$groupBy',
+          async ({ cursor, groupBy, measureWith, expectedValue }) => {
+            const response = await gqlRequest(app, queryStockPriceHistory, {
+              id: Consts.HGLG11_ID,
+              groupBy,
+              cursor,
+            });
+
+            expect(response.status).toBe(200);
+            const { edges: prices } = response.body.data.stock.prices;
+            expect(prices).not.toHaveLength(0);
+
+            prices.forEach(({ node: price }) => {
+              console.log('===== period', price.period);
+              expect(measureWith(price.period.to, price.period.from)).toBe(
+                expectedValue,
+              );
+            });
+          },
+        );
+      });
+
+      it('paginates results', async () => {
+        const response1 = await gqlRequest(app, queryStockPriceHistory, {
+          id: Consts.HGLG11_ID,
+          groupBy: GroupInterval.DAY,
+          cursor: null,
+        });
+
+        expect(response1.status).toBe(200);
+        const { endCursor } = response1.body.data.stock.prices.pageInfo;
+
+        const response2 = await gqlRequest(app, queryStockPriceHistory, {
+          id: Consts.HGLG11_ID,
+          groupBy: GroupInterval.DAY,
+          cursor: endCursor,
+        });
+
+        const prices1 = response1.body.data.stock.prices.edges;
+        const prices2 = response2.body.data.stock.prices.edges;
+
+        expect(response2.status).toBe(200);
+        expect(intersection(prices1, prices2)).toStrictEqual([]);
+      });
     });
   });
 
