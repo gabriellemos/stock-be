@@ -14,14 +14,16 @@ import MockDate from 'mockdate';
 
 import { CommonModule } from 'src/common/common.module';
 import { ConfigureModule } from 'src/configure/configure.module';
+import { SpreadsheetsService } from 'src/spreadsheets/spreadsheets.service';
+import { LogModule } from 'src/log/log.module';
 import { StockModule } from 'src/stock/stock.module';
 import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 import { GroupInterval } from 'src/common/scalars/group-interval.scalar';
 
 import Consts from 'test/utils/conts';
 import { gqlRequest } from 'test/utils';
-import { mockedLogModule } from 'test/mocks/mocked-log.module';
-import { mockedSpreadsheetsModule } from 'test/mocks/mocked-spreadsheets.module';
+import { mockedLogService } from 'test/mocks/mocked-log.module';
+import { mockedSpreadsheetsService } from 'test/mocks/mocked-spreadsheets.module';
 
 describe('StockModule (e2e)', () => {
   let app: INestApplication;
@@ -29,8 +31,12 @@ describe('StockModule (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [CommonModule, ConfigureModule, StockModule],
-      providers: [mockedLogModule, mockedSpreadsheetsModule],
-    }).compile();
+    })
+      .overrideProvider(LogModule)
+      .useValue(mockedLogService)
+      .overrideProvider(SpreadsheetsService)
+      .useValue(mockedSpreadsheetsService)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -38,6 +44,11 @@ describe('StockModule (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    mockedLogService.mockReset();
+    mockedSpreadsheetsService.mockReset();
   });
 
   describe('query stock', () => {
@@ -357,9 +368,90 @@ describe('StockModule (e2e)', () => {
   });
 
   describe('mutation trackStock', () => {
-    it.todo('registers a new stock');
-    it.todo('throws error if it already exists');
-    it.todo('adds stock to tracking list');
+    const trackStockMutation = `
+      mutation TrackStock($input: TrackStockInput!) {
+        trackStock(input: $input) {
+          _id
+          ticket
+          exchange
+          latestDate
+          price {
+            __typename
+          }
+          priceHistory {
+            __typename
+          }
+          prices {
+            edges {
+              __typename
+            }
+          }
+        }
+      }
+    `;
+
+    beforeEach(() => {
+      mockedSpreadsheetsService.trackStock.mockResolvedValue(Promise.resolve());
+    });
+
+    it('registers a new stock', async () => {
+      const response = await gqlRequest(app, trackStockMutation, {
+        input: {
+          exchange: 'BVMF',
+          ticket: 'ZZZZ11',
+        },
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toStrictEqual({
+        data: {
+          trackStock: {
+            _id: expect.any(String),
+            ticket: 'ZZZZ11',
+            exchange: 'BVMF',
+            latestDate: '2000-01-01T02:00:00.000Z',
+            price: null,
+            priceHistory: [],
+            prices: { edges: [] },
+          },
+        },
+      });
+    });
+
+    it('throws error if it already exists', async () => {
+      const response = await gqlRequest(app, trackStockMutation, {
+        input: {
+          exchange: 'BVMF',
+          ticket: 'ALZR11',
+        },
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toStrictEqual({
+        errors: [
+          expect.objectContaining({
+            message: 'Stock already tracked: BVMF:ALZR11',
+          }),
+        ],
+        data: null,
+      });
+    });
+
+    it('adds stock to tracking list', async () => {
+      mockedSpreadsheetsService.trackStock.mockResolvedValue(Promise.resolve());
+      const response = await gqlRequest(app, trackStockMutation, {
+        input: {
+          exchange: 'BVMF',
+          ticket: 'XXXX11',
+        },
+      });
+
+      expect(response.status).toBe(200);
+      expect(mockedSpreadsheetsService.trackStock).toHaveBeenCalledTimes(1);
+      expect(mockedSpreadsheetsService.trackStock).toHaveBeenCalledWith(
+        'BVMF:XXXX11',
+      );
+    });
   });
 
   describe('download history', () => {});

@@ -1,6 +1,3 @@
-import { ValueProvider } from '@nestjs/common/interfaces/modules/provider.interface';
-
-import { LogModule } from 'src/log/log.module';
 import { LogService } from 'src/log/log.service';
 
 type MockType = jest.Mocked<Partial<LogService>> & { mockReset: () => void };
@@ -16,9 +13,4 @@ export const mockedLogService: MockType = {
     mockedLogInfo.mockReset();
     mockedLogError.mockReset();
   },
-};
-
-export const mockedLogModule: ValueProvider = {
-  provide: LogModule,
-  useValue: mockedLogService,
 };
