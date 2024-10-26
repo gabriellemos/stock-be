@@ -1,4 +1,4 @@
-import { SpreadsheetsService } from 'src/spreadsheets/spreadsheets.service';
+import { SpreadsheetsService } from 'src/project/spreadsheets/spreadsheets.service';
 
 type MockType = jest.Mocked<Partial<SpreadsheetsService>> & {
   mockReset: () => void;

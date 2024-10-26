@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { LogModule } from 'src/log/log.module';
+import { LogModule } from 'src/core/log/log.module';
 
 import { SpreadsheetsModule } from '../spreadsheets/spreadsheets.module';
 import { HistoryItem, HistoryItemSchema } from './entities/history-item.entity';

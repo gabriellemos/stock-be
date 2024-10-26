@@ -12,9 +12,9 @@ import {
 } from 'date-fns';
 import { isNaN } from 'lodash';
 
-import { LogService } from 'src/log/log.service';
-import { SpreadsheetsService } from 'src/spreadsheets/spreadsheets.service';
-import type { HistoryData } from 'src/spreadsheets/spreadsheets.service';
+import { LogService } from 'src/core/log/log.service';
+import { SpreadsheetsService } from 'src/project/spreadsheets/spreadsheets.service';
+import type { HistoryData } from 'src/project/spreadsheets/spreadsheets.service';
 import { GroupInterval } from 'src/common/scalars/group-interval.scalar';
 import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 

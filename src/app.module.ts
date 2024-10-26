@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
-import { LogModule } from './log/log.module';
+import { LogModule } from './core/log/log.module';
 import { CommonModule } from './common/common.module';
-import { ConfigureModule } from './configure/configure.module';
-import { SpreadsheetsModule } from './spreadsheets/spreadsheets.module';
-import { StockModule } from './stock/stock.module';
+import { ConfigureModule } from './core/configure/configure.module';
+import { SpreadsheetsModule } from './project/spreadsheets/spreadsheets.module';
+import { StockModule } from './project/stock/stock.module';
 
 @Module({
   imports: [

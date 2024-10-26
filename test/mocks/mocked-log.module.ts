@@ -1,4 +1,4 @@
-import { LogService } from 'src/log/log.service';
+import { LogService } from 'src/core/log/log.service';
 
 type MockType = jest.Mocked<Partial<LogService>> & { mockReset: () => void };
 

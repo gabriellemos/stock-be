@@ -13,10 +13,10 @@ import { intersection } from 'lodash';
 import MockDate from 'mockdate';
 
 import { CommonModule } from 'src/common/common.module';
-import { ConfigureModule } from 'src/configure/configure.module';
-import { SpreadsheetsService } from 'src/spreadsheets/spreadsheets.service';
-import { LogModule } from 'src/log/log.module';
-import { StockModule } from 'src/stock/stock.module';
+import { ConfigureModule } from 'src/core/configure/configure.module';
+import { SpreadsheetsService } from 'src/project/spreadsheets/spreadsheets.service';
+import { LogModule } from 'src/core/log/log.module';
+import { StockModule } from 'src/project/stock/stock.module';
 import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 import { GroupInterval } from 'src/common/scalars/group-interval.scalar';
 
