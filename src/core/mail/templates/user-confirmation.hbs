@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Bem Vindo!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&family=Sigmar&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        color: #333;
+        font-size: 1.1rem;
+        background: #eee;
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      header {
+        padding: 0.8rem 1rem;
+        font-family: 'Sigmar', cursive;
+        font-size: 1.4rem;
+      }
+
+      main {
+        color: #eee;
+        background: #333;
+        padding: 3rem 1rem;
+      }
+
+      table {
+        margin: auto;
+      }
+
+      td {
+        padding: 8px 0;
+      }
+
+      footer {
+        padding: 1rem;
+        font-size: 0.8rem;
+      }
+
+      a {
+        text-decoration: none;
+        color: unset;
+      }
+
+      h1 {
+        font-size: 2rem;
+        padding: 0;
+        margin: 0;
+      }
+
+      .button {
+        color: #eee;
+        background: #2c4e7d;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="{{app-link}}">Meu Portfólio</a>
+    </header>
+    <main>
+      <table>
+        <tr>
+          <td align="center">
+            <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+            <svg
+              width="80px"
+              height="80px"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="12" cy="9" r="3" stroke="#eee" stroke-width="1.5" />
+              <path
+                d="M17.9691 20C17.81 17.1085 16.9247 15 11.9999 15C7.07521 15 6.18991 17.1085 6.03076 20"
+                stroke="#eee"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+              <path
+                d="M7 3.33782C8.47087 2.48697 10.1786 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 10.1786 2.48697 8.47087 3.33782 7"
+                stroke="#eee"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </td>
+        </tr>
+        <tr>
+          <td align="center">
+            <h1>Bem vindo {{username}}!</h1>
+          </td>
+        </tr>
+        <tr>
+          <td align="center">
+            Sua conta está quase pronta para uso.<br/>Finalize seu cadastro,
+            configurando uma senha para seu usuário.
+          </td>
+        </tr>
+        <tr>
+          <td align="center">
+            <a class="button" href="{{password-link}}">Configurar senha</a>
+          </td>
+        </tr>
+      </table>
+    </main>
+    <footer>© 2024 Meu Portfólio</footer>
+  </body>
+</html>
