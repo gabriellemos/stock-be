@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 import { BaseEntity } from 'src/common/entities/base.entity';
 
@@ -11,5 +12,5 @@ export class Secret extends BaseEntity {
   expriresAt: Date;
 }
 
-export type SecretDocument = Secret & Document;
 export const SecretSchema = SchemaFactory.createForClass(Secret);
+export type SecretModel = Model<Secret>;

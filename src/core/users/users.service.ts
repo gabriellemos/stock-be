@@ -10,8 +10,8 @@ import { RegisterUserInput } from './dto/register-user.input';
 import { UpdatePasswordInput } from './dto/update-password.input';
 import { ForgotPasswordInput } from './dto/forgot-password.input';
 
-import { User, UserDocument } from './entities/user.entity';
-import { Secret, SecretDocument } from './entities/secret.entity';
+import { User } from './entities/user.entity';
+import { Secret } from './entities/secret.entity';
 
 import { MailService } from '../mail/mail.service';
 import { LoggedUser } from '../auth/dto/logged-user';
@@ -19,8 +19,8 @@ import { LoggedUser } from '../auth/dto/logged-user';
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectModel(Secret.name) private secretModel: Model<SecretDocument>,
+    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Secret.name) private secretModel: Model<Secret>,
     private mailService: MailService,
   ) {}
 

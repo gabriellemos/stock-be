@@ -3,17 +3,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { addDays, isAfter } from 'date-fns';
 
-import {
-  RefreshToken,
-  RefreshTokenDocument,
-} from './entity/refresh-token.entity';
+import { RefreshToken } from './entity/refresh-token.entity';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class RefreshTokenService {
   constructor(
     @InjectModel(RefreshToken.name)
-    private refreshTokenModel: Model<RefreshTokenDocument>,
+    private refreshTokenModel: Model<RefreshToken>,
   ) {}
 
   findById(id: string) {

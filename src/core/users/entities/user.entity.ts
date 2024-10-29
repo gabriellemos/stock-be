@@ -1,6 +1,6 @@
 import { ObjectType, Field } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongoSchema } from 'mongoose';
+import { Model, Schema as MongoSchema } from 'mongoose';
 
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Secret } from './secret.entity';
@@ -23,5 +23,5 @@ export class User extends BaseEntity {
   secret: Secret;
 }
 
-export type UserDocument = User & Document;
 export const UserSchema = SchemaFactory.createForClass(User);
+export type UserModel = Model<User>;

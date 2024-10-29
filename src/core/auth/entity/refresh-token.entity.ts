@@ -1,6 +1,6 @@
 import { ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongoSchema } from 'mongoose';
+import { Model, Schema as MongoSchema } from 'mongoose';
 
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { User } from 'src/core/users/entities/user.entity';
@@ -15,5 +15,5 @@ export class RefreshToken extends BaseEntity {
   expriresAt: Date;
 }
 
-export type RefreshTokenDocument = RefreshToken & Document;
 export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken);
+export type RefreshTokenModel = Model<RefreshToken>;
