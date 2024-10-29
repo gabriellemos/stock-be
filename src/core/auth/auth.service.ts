@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
+import * as AuthConsts from './auth.constants';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { LoggedUser } from './dto/logged-user';
@@ -12,7 +13,10 @@ export class AuthService {
   constructor(
     private readonly refreshTokenService: RefreshTokenService,
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
+    @Inject(AuthConsts.ACCESS_JWT_SERVICE)
+    private readonly accessJwtService: JwtService,
+    @Inject(AuthConsts.REFRESH_JWT_SERVICE)
+    private readonly refreshJwtService: JwtService,
   ) {}
 
   private formatUser(user: User) {
@@ -38,14 +42,14 @@ export class AuthService {
     const refreshToken = await this.refreshTokenService.register(user);
 
     return {
-      access_token: this.jwtService.sign({
+      access_token: this.accessJwtService.sign({
         sub: refreshToken.user._id,
         refresh: refreshToken.id,
       }),
-      refresh_token: this.jwtService.sign(
-        { sub: refreshToken.id, user: refreshToken.user._id },
-        { secret: 'refresh-secret', expiresIn: '14d' }, // TODO: uptade to env value
-      ),
+      refresh_token: this.refreshJwtService.sign({
+        sub: refreshToken.id,
+        user: refreshToken.user._id,
+      }),
       user,
     };
   }
@@ -59,7 +63,7 @@ export class AuthService {
     const refreshToken = await this.refreshTokenService.findById(id);
 
     return {
-      access_token: this.jwtService.sign({
+      access_token: this.accessJwtService.sign({
         sub: refreshToken.user._id,
         refresh: refreshToken.id,
       }),
