@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import * as AuthConsts from './auth.constants';
 import { AuthService } from './auth.service';
 import { LocalStrategy } from './strategy/local.strategy';
 import { JwtAccessStrategy } from './strategy/jwt-access.strategy';
@@ -13,9 +12,9 @@ import {
   RefreshToken,
   RefreshTokenSchema,
 } from './entity/refresh-token.entity';
-import { RefreshTokenService } from './refresh-token.service';
 import { AuthConfigModule } from './auth.config';
-import { generateJwtProviderFor } from './jwt.factory';
+import { RefreshTokenService } from './refresh-token.service';
+import { AccessJwtProvider, RefreshJwtProvider } from './jwt.provider';
 
 @Module({
   imports: [
@@ -27,8 +26,8 @@ import { generateJwtProviderFor } from './jwt.factory';
     ]),
   ],
   providers: [
-    generateJwtProviderFor(AuthConsts.ACCESS_JWT_SERVICE),
-    generateJwtProviderFor(AuthConsts.REFRESH_JWT_SERVICE),
+    AccessJwtProvider,
+    RefreshJwtProvider,
     AuthResolver,
     AuthService,
     RefreshTokenService,
