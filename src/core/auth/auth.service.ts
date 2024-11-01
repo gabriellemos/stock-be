@@ -44,10 +44,10 @@ export class AuthService {
     return {
       access_token: this.accessJwtService.sign({
         sub: refreshToken.user._id,
-        refresh: refreshToken.id,
+        refresh: refreshToken._id,
       }),
       refresh_token: this.refreshJwtService.sign({
-        sub: refreshToken.id,
+        sub: refreshToken._id,
         user: refreshToken.user._id,
       }),
       user,
@@ -65,7 +65,7 @@ export class AuthService {
     return {
       access_token: this.accessJwtService.sign({
         sub: refreshToken.user._id,
-        refresh: refreshToken.id,
+        refresh: refreshToken._id,
       }),
     };
   }

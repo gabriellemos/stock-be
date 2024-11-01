@@ -56,7 +56,7 @@ export class UsersService {
 
     // Encode information to send in email
     const key = Buffer.from(
-      `${registeredUser.id};${secret.id}`,
+      `${registeredUser._id};${secret._id}`,
       'utf8',
     ).toString('base64');
 
@@ -70,14 +70,14 @@ export class UsersService {
   }
 
   async setPassword(input: SetPasswordInput) {
-    const user = await this.userModel.findById(input.id).populate('secret');
+    const user = await this.userModel.findById(input._id).populate('secret');
 
     // User not found || Secret not found
     // Secret doesn't match || Secret expired
     if (
       !user ||
       !user.secret ||
-      input.secret !== user.secret.id ||
+      input.secret !== user.secret._id.toString() ||
       isBefore(user.secret.expriresAt, new Date())
     ) {
       if (user.secret) {
@@ -92,8 +92,8 @@ export class UsersService {
 
     // Hash password and update user
     const password = await bcrypt.hash(input.newPassword, 10);
-    return this.userModel.findOneAndUpdate(
-      { id: input.id },
+    return await this.userModel.findOneAndUpdate(
+      { _id: input._id },
       { password, secret: null },
       { new: true },
     );
@@ -110,7 +110,7 @@ export class UsersService {
     // Hash password and update user
     const newPassword = await bcrypt.hash(input.newPassword, 10);
     return this.userModel.findOneAndUpdate(
-      { id: loggedUser.userID },
+      { _id: loggedUser.userID },
       { password: newPassword, secret: null },
       { new: true },
     );
@@ -135,9 +135,10 @@ export class UsersService {
       .populate('secret');
 
     // Encode information to send in email
-    const key = Buffer.from(`${updatedUser.id};${secret.id}`, 'utf8').toString(
-      'base64',
-    );
+    const key = Buffer.from(
+      `${updatedUser._id};${secret._id}`,
+      'utf8',
+    ).toString('base64');
 
     // Send email with secret key
     this.mailService.forgotPassword(
