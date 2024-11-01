@@ -1,5 +1,4 @@
 import { Model, ObjectId } from 'mongoose';
-import { randomUUID } from 'crypto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { addHours, isBefore } from 'date-fns';
@@ -39,26 +38,29 @@ export class UsersService {
   }
 
   async register(input: RegisterUserInput) {
+    // Check if email is already registered
     if (await this.findByEmail(input.email)) {
       throw new BadRequestException({ message: 'User already registered' });
     }
 
+    // Generate secret (to set password)
     const secret = await new this.secretModel({
-      key: randomUUID(),
       expriresAt: addHours(new Date(), 1),
     }).save();
 
+    // Register user with secret set
     const registeredUser = await new this.userModel({
       ...input,
       secret,
     }).save();
 
-    // Send email with secret key
+    // Encode information to send in email
     const key = Buffer.from(
-      `${registeredUser.id};${secret.key}`,
+      `${registeredUser.id};${secret.id}`,
       'utf8',
     ).toString('base64');
 
+    // Send email with secret key
     this.mailService.confirmSignUp(
       registeredUser.email,
       registeredUser.name,
@@ -75,15 +77,20 @@ export class UsersService {
     if (
       !user ||
       !user.secret ||
-      input.secret !== user.secret.key ||
+      input.secret !== user.secret.id ||
       isBefore(user.secret.expriresAt, new Date())
     ) {
-      if (user.secret) await this.deleteSecret(user.secret._id);
+      if (user.secret) {
+        // Manually delete expired secret
+        await this.deleteSecret(user.secret._id);
+      }
       throw new BadRequestException({ message: 'Invalid request' });
     } else if (user.secret) {
+      // Delete used secret
       await this.deleteSecret(user.secret._id);
     }
 
+    // Hash password and update user
     const password = await bcrypt.hash(input.newPassword, 10);
     return this.userModel.findOneAndUpdate(
       { id: input.id },
@@ -94,10 +101,13 @@ export class UsersService {
 
   async updatePassword(input: UpdatePasswordInput, loggedUser: LoggedUser) {
     const user = await this.userModel.findById(loggedUser.userID).lean();
+
+    // Check if user exists and old password matches
     if (!user || !(await bcrypt.compare(input.oldPassword, user.password))) {
       throw new BadRequestException({ message: 'Invalid request' });
     }
 
+    // Hash password and update user
     const newPassword = await bcrypt.hash(input.newPassword, 10);
     return this.userModel.findOneAndUpdate(
       { id: loggedUser.userID },
@@ -112,11 +122,11 @@ export class UsersService {
     if (!user) {
       throw new BadRequestException({ message: 'Invalid request' });
     } else if (user.secret?._id) {
+      // Manually delete expired secret
       await this.deleteSecret(user.secret._id);
     }
 
     const secret = await new this.secretModel({
-      key: randomUUID(),
       expriresAt: addHours(new Date(), 1),
     }).save();
 
@@ -124,11 +134,12 @@ export class UsersService {
       .findByIdAndUpdate(user._id, { secret: secret }, { new: true })
       .populate('secret');
 
-    // Send email with secret key
-    const key = Buffer.from(`${updatedUser.id};${secret.key}`, 'utf8').toString(
+    // Encode information to send in email
+    const key = Buffer.from(`${updatedUser.id};${secret.id}`, 'utf8').toString(
       'base64',
     );
 
+    // Send email with secret key
     this.mailService.forgotPassword(
       updatedUser.email,
       updatedUser.name,
