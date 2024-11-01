@@ -2,6 +2,26 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type User {
+  _id: ID!
+  name: String!
+  email: String!
+}
+
+type LoginResponse {
+  access_token: String!
+  refresh_token: String!
+  user: User!
+}
+
+type RefreshTokenResponse {
+  access_token: String!
+}
+
+type LogoutResponse {
+  success: Boolean!
+}
+
 type PageInfo {
   hasNextPage: Boolean!
   endCursor: String
@@ -62,11 +82,44 @@ scalar GroupInterval
 scalar TimeInterval
 
 type Query {
+  whoAmI: User!
   stock(id: ID!): Stock!
 }
 
 type Mutation {
+  login(input: LoginUserInput!): LoginResponse!
+  refresh: RefreshTokenResponse!
+  logout: LogoutResponse!
+  register(input: RegisterUserInput!): User!
+  setPassword(input: SetPasswordInput!): User!
+  updatePassword(input: UpdatePasswordInput!): User!
+  forgotPassword(input: ForgotPasswordInput!): User!
   trackStock(input: TrackStockInput!): Stock!
+}
+
+input LoginUserInput {
+  email: String!
+  password: String!
+}
+
+input RegisterUserInput {
+  name: String!
+  email: String!
+}
+
+input SetPasswordInput {
+  _id: ID!
+  secret: String!
+  newPassword: String!
+}
+
+input UpdatePasswordInput {
+  oldPassword: String!
+  newPassword: String!
+}
+
+input ForgotPasswordInput {
+  email: String!
 }
 
 input TrackStockInput {
