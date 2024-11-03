@@ -1,13 +1,11 @@
 import { UseGuards } from '@nestjs/common';
-import { Resolver, Mutation, Args, Query, Context } from '@nestjs/graphql';
+import { Resolver, Mutation, Args, Context } from '@nestjs/graphql';
 
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { LoginUserInput } from './dto/login-user.input';
 import { LoginResponse } from './dto/login-response';
 import { RefreshTokenResponse } from './dto/refresh-token-response';
-
-import { User } from '../users/entities/user.entity';
 
 import { GqlAuthGuard } from './guard/gql-auth.guard';
 import { JwtAccessAuthGuard } from './guard/jwt-access-auth.guard';
@@ -40,11 +38,5 @@ export class AuthResolver {
   @Mutation(() => LogoutResponse)
   logout(@CurrentUser() user: LoggedUser) {
     return this.authService.logout(user);
-  }
-
-  @Query(() => User)
-  @UseGuards(JwtAccessAuthGuard)
-  whoAmI(@CurrentUser() user: LoggedUser) {
-    return this.usersService.findById(user.userID);
   }
 }

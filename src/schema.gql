@@ -82,7 +82,7 @@ scalar GroupInterval
 scalar TimeInterval
 
 type Query {
-  whoAmI: User!
+  loggedUser: User!
   stock(id: ID!): Stock!
 }
 

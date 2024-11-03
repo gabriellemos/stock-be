@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common';
-import { Resolver, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 
 import { JwtAccessAuthGuard } from 'src/core/auth/guard/jwt-access-auth.guard';
 
@@ -16,6 +16,12 @@ import { LoggedUser } from '../auth/dto/logged-user';
 @Resolver(() => User)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
+
+  @Query(() => User)
+  @UseGuards(JwtAccessAuthGuard)
+  loggedUser(@CurrentUser() loggedUser: LoggedUser) {
+    return this.usersService.findById(loggedUser.userID);
+  }
 
   @Mutation(() => User)
   register(@Args('input') input: RegisterUserInput) {
