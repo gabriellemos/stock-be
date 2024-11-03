@@ -23,7 +23,7 @@ export class UsersService {
     @Inject() private readonly logService: LogService,
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Secret.name) private secretModel: Model<Secret>,
-    private mailService: MailService,
+    @Inject() private mailService: MailService,
   ) {}
 
   async findById(id: string) {
@@ -57,19 +57,8 @@ export class UsersService {
       secret,
     }).save();
 
-    // Encode information to send in email
-    const key = Buffer.from(
-      `${registeredUser._id};${secret._id}`,
-      'utf8',
-    ).toString('base64');
-
     // Send email with secret key
-    this.mailService.confirmSignUp(
-      registeredUser.email,
-      registeredUser.name,
-      `${process.env.FRONTEND_URL}/set-password?key=${key}`,
-    );
-
+    this.mailService.confirmSignUp(registeredUser, secret.id);
     this.logService.logInfo('[RegisterUser] new user', { input });
 
     return registeredUser;
@@ -147,21 +136,10 @@ export class UsersService {
       .findByIdAndUpdate(user._id, { secret: secret }, { new: true })
       .populate('secret');
 
-    // Encode information to send in email
-    const key = Buffer.from(
-      `${updatedUser._id};${secret._id}`,
-      'utf8',
-    ).toString('base64');
-
     // Send email with secret key
-    this.mailService.forgotPassword(
-      updatedUser.email,
-      updatedUser.name,
-      `${process.env.FRONTEND_URL}/set-password?key=${key}`,
-    );
-
+    this.mailService.forgotPassword(updatedUser, secret.id);
     this.logService.logInfo('[ForgotPassword] Password forgotten', {
-      userId: user._id.toString(),
+      userId: user.id,
     });
 
     return updatedUser;
