@@ -5,9 +5,16 @@ const constants = {
   KNCR11_ID: '6715aa771c7a438580221ad6',
 
   USERS: {
-    JOHN_DOE: '67244e9962394e5466ae4f65',
-    JOHN_DOE_PASSWORD: 'secure-password',
-    JANE_DOE: '67259d317e62578812fce1aa',
+    JOHN_DOE: {
+      ID: '6715aa581c7a438580220700',
+      PASSWORD: 'secure-password',
+      EMAIL: 'john@example.com',
+    },
+    JANE_DOE: {
+      ID: '67259d317e62578812fce1aa',
+      PASSWORD_SECRET: '672566e389593fbcdb7eed55',
+      EMAIL: 'jane@example.com',
+    },
   },
 } as const;
 

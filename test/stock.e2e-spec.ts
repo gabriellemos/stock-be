@@ -15,7 +15,7 @@ import MockDate from 'mockdate';
 import { CommonModule } from 'src/common/common.module';
 import { ConfigureModule } from 'src/core/configure/configure.module';
 import { SpreadsheetsService } from 'src/project/spreadsheets/spreadsheets.service';
-import { LogModule } from 'src/core/log/log.module';
+import { LogService } from 'src/core/log/log.service';
 import { StockModule } from 'src/project/stock/stock.module';
 import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 import { GroupInterval } from 'src/common/scalars/group-interval.scalar';
@@ -32,7 +32,7 @@ describe('StockModule (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [CommonModule, ConfigureModule, StockModule],
     })
-      .overrideProvider(LogModule)
+      .overrideProvider(LogService)
       .useValue(mockedLogService)
       .overrideProvider(SpreadsheetsService)
       .useValue(mockedSpreadsheetsService)
@@ -333,7 +333,6 @@ describe('StockModule (e2e)', () => {
             expect(prices).not.toHaveLength(0);
 
             prices.forEach(({ node: price }) => {
-              console.log('===== period', price.period);
               expect(measureWith(price.period.to, price.period.from)).toBe(
                 expectedValue,
               );

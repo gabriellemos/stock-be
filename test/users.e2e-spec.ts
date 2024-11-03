@@ -1,12 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { startOfDay } from 'date-fns';
-import MockDate from 'mockdate';
 
 import { ConfigureModule } from 'src/core/configure/configure.module';
-import { LogModule } from 'src/core/log/log.module';
 import { UsersModule } from 'src/core/users/users.module';
-import { MailModule } from 'src/core/mail/mail.module';
+import { LogService } from 'src/core/log/log.service';
+import { MailService } from 'src/core/mail/mail.service';
 
 import Consts from 'test/utils/conts';
 import { gqlRequest } from 'test/utils';
@@ -20,9 +18,9 @@ describe('Users (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [ConfigureModule, UsersModule],
     })
-      .overrideProvider(LogModule)
+      .overrideProvider(LogService)
       .useValue(mockedLogService)
-      .overrideProvider(MailModule)
+      .overrideProvider(MailService)
       .useValue(mockedMailService)
       .compile();
 
@@ -37,15 +35,60 @@ describe('Users (e2e)', () => {
   beforeEach(() => {
     mockedLogService.mockReset();
     mockedMailService.mockReset();
-    MockDate.set(startOfDay(new Date('2024-10-21T19:56:00Z')));
   });
 
   describe('mutation register', () => {
-    it.todo('registers a new user');
-    it.todo('send email with secret');
+    const registerMutation = `
+      mutation RegisterUser($input: RegisterUserInput!) {
+        register(input: $input) {
+          _id
+          name
+          email
+        }
+      }
+    `;
+
+    it('registers a new user', async () => {
+      const userInput = { name: 'John Jr.', email: 'junior@example.com' };
+      const response = await gqlRequest(app, registerMutation, {
+        input: userInput,
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toStrictEqual({
+        data: {
+          register: {
+            _id: expect.any(String),
+            ...userInput,
+          },
+        },
+      });
+
+      expect(mockedMailService.confirmSignUp).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining(userInput),
+        expect.any(String),
+      );
+    });
 
     describe('invalid user', () => {
-      it.todo('email already taken');
+      it('email already taken', async () => {
+        const response = await gqlRequest(app, registerMutation, {
+          input: { name: 'Jane Jr.', email: Consts.USERS.JOHN_DOE.EMAIL },
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toStrictEqual({
+          errors: [
+            expect.objectContaining({
+              message: 'User already registered',
+            }),
+          ],
+          data: null,
+        });
+
+        expect(mockedMailService.confirmSignUp).not.toHaveBeenCalled();
+      });
     });
   });
 
