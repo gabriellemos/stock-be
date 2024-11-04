@@ -1,13 +1,9 @@
 // prettier-ignore
 db = db.getSiblingDB('stock-controll');
 
-db.secrets.insertMany([
-  { _id: ObjectId('672566e389593fbcdb7eed55'), date: new Date('2024-10-22T02:59:59.999Z'), __v: 0 },
-]);
-
 db.users.insertMany([
   { _id: ObjectId('67244e9962394e5466ae4f65'), name: 'John Doe', email: 'john@example.com', secret: undefined, password: '$2b$$2b$10$lj/ckpE0loDaD40qwhEPtebu7WPiHmI0Kj2v1O1h.fd7VyDHwvX8K', __v: 0 },
-  { _id: ObjectId('67259d317e62578812fce1aa'), name: 'Jane Doe', email: 'jane@example.com', secret: ObjectId('672566e389593fbcdb7eed55'), password: undefined, __v: 0 },
+  { _id: ObjectId('67259d317e62578812fce1aa'), name: 'Jane Doe', email: 'jane@example.com', secret: undefined, password: '$2b$$2b$10$lj/ckpE0loDaD40qwhEPtebu7WPiHmI0Kj2v1O1h.fd7VyDHwvX8K', __v: 0 },
 ]);
 
 db.stocks.insertMany([

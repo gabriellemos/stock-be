@@ -69,14 +69,14 @@ export class UsersService {
 
     if (!user) {
       throw new BadRequestException({ message: 'Invalid request' });
-    } else if (!user.secret || input.secret !== user.secret._id.toString()) {
+    } else if (!user.secret || input.secret !== user.secret.id) {
       this.logService.logWarn("[ResetPassword] someone else's token", {
-        userId: user._id.toString(),
+        userId: user.id,
       });
       throw new BadRequestException({ message: 'Invalid request' });
     } else if (isBefore(user.secret.expriresAt, new Date())) {
       this.logService.logInfo('[ResetPassword] expired token', {
-        userId: user._id.toString(),
+        userId: user.id,
       });
       throw new BadRequestException({ message: 'Invalid request' });
     }
@@ -94,8 +94,9 @@ export class UsersService {
       { new: true },
     );
 
+    // TODO: Probably should send an email to the user here
     this.logService.logInfo('[ResetPassword] password updated', {
-      userId: user._id.toString(),
+      userId: user.id,
     });
 
     return updatedUser;

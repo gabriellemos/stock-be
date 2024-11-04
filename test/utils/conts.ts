@@ -6,13 +6,13 @@ const constants = {
 
   USERS: {
     JOHN_DOE: {
-      ID: '6715aa581c7a438580220700',
+      ID: '67244e9962394e5466ae4f65',
       PASSWORD: 'secure-password',
       EMAIL: 'john@example.com',
     },
     JANE_DOE: {
       ID: '67259d317e62578812fce1aa',
-      PASSWORD_SECRET: '672566e389593fbcdb7eed55',
+      PASSWORD: 'secure-password',
       EMAIL: 'jane@example.com',
     },
   },
