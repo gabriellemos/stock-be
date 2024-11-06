@@ -25,8 +25,16 @@ const registerMutation = `
 `;
 
 const setPasswordMutation = `
-  mutation UpdatePasswordUser($input: SetPasswordInput!) {
+  mutation UpdatePassword($input: SetPasswordInput!) {
     setPassword(input: $input) {
+      _id
+    }
+  }
+`;
+
+const forgotPasswordMutation = `
+  mutation ForgotPassword($input: ForgotPasswordInput!) {
+    forgotPassword(input: $input) {
       _id
     }
   }
@@ -113,24 +121,24 @@ describe('Users (e2e)', () => {
     });
   });
 
+  const registerUser = async () => {
+    const username = uniqueId();
+    const response = await gqlRequest(app, registerMutation, {
+      input: { name: username, email: `${username}@example.com` },
+    });
+
+    expect(response.status).toBe(200);
+    expect(mockedMailService.confirmSignUp).toHaveBeenCalledTimes(1);
+    const [user, secret] = mockedMailService.confirmSignUp.mock.calls[0];
+
+    // Reset mocks: Registering a user is not the focus of this test.
+    mockedLogService.mockReset();
+    mockedMailService.mockReset();
+
+    return { user, secret };
+  };
+
   describe('mutation setPassword', () => {
-    const registerUser = async () => {
-      const username = uniqueId();
-      const response = await gqlRequest(app, registerMutation, {
-        input: { name: username, email: `${username}@example.com` },
-      });
-
-      expect(response.status).toBe(200);
-      expect(mockedMailService.confirmSignUp).toHaveBeenCalledTimes(1);
-      const [user, secret] = mockedMailService.confirmSignUp.mock.calls[0];
-
-      // Reset mocks: Registering a user is not the focus of this test.
-      mockedLogService.mockReset();
-      mockedMailService.mockReset();
-
-      return { user, secret };
-    };
-
     const setPassword = async (userID: string, secret: string) => {
       return await gqlRequest(app, setPasswordMutation, {
         input: {
@@ -267,11 +275,52 @@ describe('Users (e2e)', () => {
   });
 
   describe('mutation forgotPassword', () => {
-    it.todo('reset password for a user');
-    it.todo('send email with secret');
+    const forgotPassword = async (email: string) => {
+      return await gqlRequest(app, forgotPasswordMutation, {
+        input: { email },
+      });
+    };
+
+    it('reset password for a user', async () => {
+      const { user } = await registerUser();
+      const response = await forgotPassword(user.email);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toStrictEqual({
+        data: {
+          forgotPassword: {
+            _id: user.id,
+          },
+        },
+      });
+
+      const { secret: oldSecret } = user;
+      expect(mockedMailService.forgotPassword).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ id: user.id, email: user.email }),
+        expect.not.stringMatching(oldSecret.id),
+      );
+      expect(mockedLogService.logInfo).toHaveBeenNthCalledWith(
+        1,
+        '[ForgotPassword] Password forgotten',
+        { userId: user.id },
+      );
+    });
 
     describe('invalid user', () => {
-      it.todo('user does not exist');
+      it('user does not exist', async () => {
+        const response = await forgotPassword('unexisting-user@example.com');
+
+        expect(response.status).toBe(200);
+        expect(response.body).toStrictEqual({
+          errors: [
+            expect.objectContaining({
+              message: 'Invalid request',
+            }),
+          ],
+          data: null,
+        });
+      });
     });
   });
 });
