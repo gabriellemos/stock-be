@@ -1,5 +1,7 @@
 import { InputType, Field, ID } from '@nestjs/graphql';
 
+import { PasswordScalar } from 'src/core/configure/scalars/password.scalar';
+
 @InputType()
 export class SetPasswordInput {
   @Field(() => ID)
@@ -8,6 +10,6 @@ export class SetPasswordInput {
   @Field()
   secret: string;
 
-  @Field()
+  @Field(() => PasswordScalar)
   newPassword: string;
 }

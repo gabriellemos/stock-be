@@ -132,17 +132,17 @@ describe('Users (e2e)', () => {
   });
 
   describe('mutation setPassword', () => {
-    const setPassword = async (userID: string, secret: string) => {
+    const setPassword = async (
+      userID: string,
+      secret: string,
+      newPassword = 's3cur3-p@ssw0rd',
+    ) => {
       return await helper.gqlRequest(setPasswordMutation, {
-        input: {
-          _id: userID,
-          newPassword: 'secure-password',
-          secret,
-        },
+        input: { _id: userID, newPassword, secret },
       });
     };
 
-    it('update password for a user', async () => {
+    it('password updated', async () => {
       const { user, secret } = await helper.registerUser();
       const response = await setPassword(user.id, secret);
 
@@ -253,12 +253,82 @@ describe('Users (e2e)', () => {
       // try 'non-existent' as user ID
       it.todo('invalid user ID');
     });
+
+    describe('valid password', () => {
+      it.each([
+        { validation: 'min size (08 chars)', newPassword: '0A!00000' },
+        {
+          validation: 'max size (32 chars)',
+          newPassword: '0A!00000000000000000000000000000',
+        },
+      ])('$validation', async ({ newPassword }) => {
+        const { user, secret } = await helper.registerUser();
+        const response = await setPassword(user.id, secret, newPassword);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toStrictEqual({
+          data: {
+            setPassword: {
+              _id: user.id,
+            },
+          },
+        });
+
+        mockedMailService.expectNoEmailToBeSent();
+        expect(mockedLogService.logInfo).toHaveBeenNthCalledWith(
+          1,
+          '[ResetPassword] password updated',
+          { userId: user.id },
+        );
+      });
+    });
+
+    describe('invalid password', () => {
+      it.each([
+        {
+          expected: 'Must be at least 8 characters long',
+          newPassword: '0A!0000',
+        },
+        {
+          expected: 'Must be at most 32 characters long',
+          newPassword: '0A!000000000000000000000000000000',
+        },
+        {
+          expected: 'Must contain at least one letter',
+          newPassword: '00!00000',
+        },
+        {
+          expected: 'Must contain at least one number',
+          newPassword: 'AB!abcde',
+        },
+        {
+          expected: 'Must contain at least one special character (!@#$%^&*)',
+          newPassword: '00a00000',
+        },
+      ])('$expected', async ({ expected, newPassword }) => {
+        const { user, secret } = await helper.registerUser();
+        const response = await setPassword(user.id, secret, newPassword);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toStrictEqual({
+          errors: [
+            expect.objectContaining({
+              extensions: { code: 'BAD_USER_INPUT' },
+              message: expect.stringContaining(expected),
+            }),
+          ],
+        });
+
+        mockedLogService.expectNoLogToBeMade();
+        mockedMailService.expectNoEmailToBeSent();
+      });
+    });
   });
 
   describe('mutation updatePassword', () => {
-    const newPassword = 'updated-password';
+    const newPassword = 'upd@t3d-p@ssw0rd';
 
-    it('update password for a user', async () => {
+    it('password updated', async () => {
       const { user, password } = await helper.registerUserAndLogin();
 
       const response = await helper.gqlRequest(updatePasswordMutation, {
@@ -280,7 +350,7 @@ describe('Users (e2e)', () => {
       // Current password is checked before updating
       // If this request fails, the password is not updated.
       const otherResponse = await helper.gqlRequest(updatePasswordMutation, {
-        input: { oldPassword: newPassword, newPassword: 'secure-as-possible' },
+        input: { oldPassword: newPassword, newPassword: 's3cur3-@s-p0ss1bl3' },
       });
 
       expect(otherResponse.status).toBe(200);
@@ -293,12 +363,98 @@ describe('Users (e2e)', () => {
       });
     });
 
-    describe('invalid data', () => {
-      it.todo('password does not match');
-      it.todo('password validation failed: min size');
-      it.todo('password validation failed: aphanumeric');
-      it.todo('password validation failed: special char');
-      it.todo('expired access token');
+    describe('valid password', () => {
+      it.each([
+        { validation: 'min size (08 chars)', newPassword: '0A!00000' },
+        {
+          validation: 'max size (32 chars)',
+          newPassword: '0A!00000000000000000000000000000',
+        },
+      ])('$validation', async ({ newPassword }) => {
+        const { user, password } = await helper.registerUserAndLogin();
+        const response = await helper.gqlRequest(updatePasswordMutation, {
+          input: { oldPassword: password, newPassword },
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toStrictEqual({
+          data: {
+            updatePassword: {
+              _id: user.id,
+            },
+          },
+        });
+
+        mockedMailService.expectNoEmailToBeSent();
+        mockedLogService.expectNoLogToBeMade();
+      });
+    });
+
+    describe('invalid password', () => {
+      it('password does not match', async () => {
+        const { password } = await helper.registerUserAndLogin();
+
+        expect(password).not.toBe('wr0ng-p@ssw0rd');
+        const response = await helper.gqlRequest(updatePasswordMutation, {
+          input: { oldPassword: 'wr0ng-p@ssw0rd', newPassword },
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toStrictEqual({
+          errors: [
+            expect.objectContaining({
+              message: 'Invalid request',
+            }),
+          ],
+          data: null,
+        });
+
+        mockedLogService.expectNoLogToBeMade();
+        mockedMailService.expectNoEmailToBeSent();
+      });
+
+      it.each([
+        {
+          expected: 'Must be at least 8 characters long',
+          newPassword: '0A!0000',
+        },
+        {
+          expected: 'Must be at most 32 characters long',
+          newPassword: '0A!000000000000000000000000000000',
+        },
+        {
+          expected: 'Must contain at least one letter',
+          newPassword: '00!00000',
+        },
+        {
+          expected: 'Must contain at least one number',
+          newPassword: 'AB!abcde',
+        },
+        {
+          expected: 'Must contain at least one special character (!@#$%^&*)',
+          newPassword: '00a00000',
+        },
+      ])('$expected', async ({ expected, newPassword }) => {
+        const { password } = await helper.registerUserAndLogin();
+
+        expect(password).not.toBe('wrong-password');
+        const response = await helper.gqlRequest(updatePasswordMutation, {
+          input: { oldPassword: password, newPassword },
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toStrictEqual({
+          errors: [
+            expect.objectContaining({
+              extensions: { code: 'BAD_USER_INPUT' },
+              message: expect.stringContaining(expected),
+            }),
+          ],
+        });
+
+        mockedLogService.expectNoLogToBeMade();
+        mockedMailService.expectNoEmailToBeSent();
+      });
     });
   });
 

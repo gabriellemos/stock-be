@@ -91,7 +91,7 @@ export const TestHelper = (app: INestApplication) => {
     return { user, secret };
   };
 
-  const registerUserWithPassword = async (password = 'secure-password') => {
+  const registerUserWithPassword = async (password = 's3cur3-p@ssw0rd') => {
     const setPasswordMutation = `
       mutation SetPassword($input: SetPasswordInput!) {
         setPassword(input: $input) {

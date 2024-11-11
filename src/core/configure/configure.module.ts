@@ -6,6 +6,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'node:path';
 
+import { PasswordScalar } from './scalars/password.scalar';
 import { databaseConfig } from './environment.config';
 import { EnvSchema } from './environment.schema';
 
@@ -28,6 +29,7 @@ const getEnvFilePath = () => {
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      resolvers: { Password: PasswordScalar },
     }),
   ],
 })
