@@ -1,6 +1,6 @@
 import { InputType, Field } from '@nestjs/graphql';
 
-import { PasswordScalar } from 'src/core/configure/scalars/password.scalar';
+import { PasswordScalar } from '../scalars/password.scalar';
 
 @InputType()
 export class UpdatePasswordInput {

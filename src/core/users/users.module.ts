@@ -7,6 +7,7 @@ import { UsersService } from './users.service';
 import { UsersResolver } from './users.resolver';
 import { User, UserSchema } from './entities/user.entity';
 import { Secret, SecretSchema } from './entities/secret.entity';
+import { PasswordScalar } from './scalars/password.scalar';
 
 import { MailModule } from '../mail/mail.module';
 
@@ -19,7 +20,7 @@ import { MailModule } from '../mail/mail.module';
       { name: Secret.name, schema: SecretSchema },
     ]),
   ],
-  providers: [UsersResolver, UsersService],
+  providers: [UsersResolver, UsersService, PasswordScalar],
   exports: [UsersService],
 })
 export class UsersModule {}
