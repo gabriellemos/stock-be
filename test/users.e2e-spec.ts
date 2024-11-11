@@ -1,16 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { addDays } from 'date-fns';
 import { uniqueId } from 'lodash';
 import MockDate from 'mockdate';
 
 import { ConfigureModule } from 'src/core/configure/configure.module';
-import { UsersModule } from 'src/core/users/users.module';
+import { AuthModule } from 'src/core/auth/auth.module';
 import { LogService } from 'src/core/log/log.service';
 import { MailService } from 'src/core/mail/mail.service';
 
 import Consts from 'test/utils/conts';
-import { gqlRequest } from 'test/utils';
+import { gqlRequest, TestHelper } from 'test/utils';
 import { mockedLogService } from 'test/mocks/mocked-log.module';
 import { mockedMailService } from 'test/mocks/mocked-mail.module';
 
@@ -25,8 +25,16 @@ const registerMutation = `
 `;
 
 const setPasswordMutation = `
-  mutation UpdatePassword($input: SetPasswordInput!) {
+  mutation SetPassword($input: SetPasswordInput!) {
     setPassword(input: $input) {
+      _id
+    }
+  }
+`;
+
+const updatePasswordMutation = `
+  mutation UpdatePassword($input: UpdatePasswordInput!) {
+    updatePassword(input: $input) {
       _id
     }
   }
@@ -41,11 +49,12 @@ const forgotPasswordMutation = `
 `;
 
 describe('Users (e2e)', () => {
+  let helper: ReturnType<typeof TestHelper>;
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [ConfigureModule, UsersModule],
+    const moduleFixture = await Test.createTestingModule({
+      imports: [ConfigureModule, AuthModule],
     })
       .overrideProvider(LogService)
       .useValue(mockedLogService)
@@ -54,6 +63,7 @@ describe('Users (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    helper = TestHelper(app);
     await app.init();
   });
 
@@ -64,6 +74,7 @@ describe('Users (e2e)', () => {
   beforeEach(() => {
     mockedLogService.mockReset();
     mockedMailService.mockReset();
+    helper.reset();
   });
 
   describe('mutation register', () => {
@@ -263,7 +274,42 @@ describe('Users (e2e)', () => {
   });
 
   describe('mutation updatePassword', () => {
-    it.todo('update password for a user');
+    const newPassword = 'updated-password';
+
+    it('update password for a user', async () => {
+      const { user, password } = await helper.registerUserAndLogin();
+
+      const response = await helper.gqlRequest(updatePasswordMutation, {
+        input: { oldPassword: password, newPassword },
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toStrictEqual({
+        data: {
+          updatePassword: {
+            _id: user.id,
+          },
+        },
+      });
+
+      mockedMailService.expectNoEmailToBeSent();
+      mockedLogService.expectNoLogToBeMade();
+
+      // Current password is checked before updating
+      // If this request fails, the password is not updated.
+      const otherResponse = await helper.gqlRequest(updatePasswordMutation, {
+        input: { oldPassword: newPassword, newPassword: 'secure-as-possible' },
+      });
+
+      expect(otherResponse.status).toBe(200);
+      expect(otherResponse.body).toStrictEqual({
+        data: {
+          updatePassword: {
+            _id: user.id,
+          },
+        },
+      });
+    });
 
     describe('invalid data', () => {
       it.todo('password does not match');
