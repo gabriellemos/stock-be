@@ -1,7 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { addDays } from 'date-fns';
-import { uniqueId } from 'lodash';
 import MockDate from 'mockdate';
 
 import { ConfigureModule } from 'src/core/configure/configure.module';
@@ -10,7 +9,7 @@ import { LogService } from 'src/core/log/log.service';
 import { MailService } from 'src/core/mail/mail.service';
 
 import Consts from 'test/utils/conts';
-import { gqlRequest, TestHelper } from 'test/utils';
+import { TestHelper } from 'test/utils';
 import { mockedLogService } from 'test/mocks/mocked-log.module';
 import { mockedMailService } from 'test/mocks/mocked-mail.module';
 
@@ -80,7 +79,7 @@ describe('Users (e2e)', () => {
   describe('mutation register', () => {
     it('registers a new user', async () => {
       const userInput = { name: 'John Jr.', email: 'junior@example.com' };
-      const response = await gqlRequest(app, registerMutation, {
+      const response = await helper.gqlRequest(registerMutation, {
         input: userInput,
       });
 
@@ -111,7 +110,7 @@ describe('Users (e2e)', () => {
 
     describe('invalid user', () => {
       it('email already taken', async () => {
-        const response = await gqlRequest(app, registerMutation, {
+        const response = await helper.gqlRequest(registerMutation, {
           input: { name: 'Jane Jr.', email: Consts.USERS.JOHN_DOE.EMAIL },
         });
 
@@ -132,26 +131,9 @@ describe('Users (e2e)', () => {
     });
   });
 
-  const registerUser = async () => {
-    const username = uniqueId();
-    const response = await gqlRequest(app, registerMutation, {
-      input: { name: username, email: `${username}@example.com` },
-    });
-
-    expect(response.status).toBe(200);
-    expect(mockedMailService.confirmSignUp).toHaveBeenCalledTimes(1);
-    const [user, secret] = mockedMailService.confirmSignUp.mock.calls[0];
-
-    // Reset mocks: Registering a user is not the focus of this test.
-    mockedLogService.mockReset();
-    mockedMailService.mockReset();
-
-    return { user, secret };
-  };
-
   describe('mutation setPassword', () => {
     const setPassword = async (userID: string, secret: string) => {
-      return await gqlRequest(app, setPasswordMutation, {
+      return await helper.gqlRequest(setPasswordMutation, {
         input: {
           _id: userID,
           newPassword: 'secure-password',
@@ -161,7 +143,7 @@ describe('Users (e2e)', () => {
     };
 
     it('update password for a user', async () => {
-      const { user, secret } = await registerUser();
+      const { user, secret } = await helper.registerUser();
       const response = await setPassword(user.id, secret);
 
       expect(response.status).toBe(200);
@@ -183,8 +165,8 @@ describe('Users (e2e)', () => {
 
     describe('invalid secret', () => {
       it('secret belongs to another user', async () => {
-        const { user } = await registerUser();
-        const { secret } = await registerUser();
+        const { user } = await helper.registerUser();
+        const { secret } = await helper.registerUser();
 
         const response = await setPassword(user.id, secret);
 
@@ -206,7 +188,7 @@ describe('Users (e2e)', () => {
       });
 
       it('secret exists but is expired', async () => {
-        const { user, secret } = await registerUser();
+        const { user, secret } = await helper.registerUser();
 
         MockDate.set(addDays(user.secret.expriresAt, 1));
         const response = await setPassword(user.id, secret);
@@ -322,13 +304,13 @@ describe('Users (e2e)', () => {
 
   describe('mutation forgotPassword', () => {
     const forgotPassword = async (email: string) => {
-      return await gqlRequest(app, forgotPasswordMutation, {
+      return await helper.gqlRequest(forgotPasswordMutation, {
         input: { email },
       });
     };
 
     it('reset password for a user', async () => {
-      const { user } = await registerUser();
+      const { user } = await helper.registerUser();
       const response = await forgotPassword(user.email);
 
       expect(response.status).toBe(200);

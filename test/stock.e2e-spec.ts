@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import {
   startOfDay,
@@ -21,15 +21,16 @@ import { TimeInterval } from 'src/common/scalars/time-interval.scalar';
 import { GroupInterval } from 'src/common/scalars/group-interval.scalar';
 
 import Consts from 'test/utils/conts';
-import { gqlRequest } from 'test/utils';
+import { TestHelper } from 'test/utils';
 import { mockedLogService } from 'test/mocks/mocked-log.module';
 import { mockedSpreadsheetsService } from 'test/mocks/mocked-spreadsheets.module';
 
 describe('StockModule (e2e)', () => {
+  let helper: ReturnType<typeof TestHelper>;
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture = await Test.createTestingModule({
       imports: [CommonModule, ConfigureModule, StockModule],
     })
       .overrideProvider(LogService)
@@ -39,6 +40,7 @@ describe('StockModule (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    helper = TestHelper(app);
     await app.init();
   });
 
@@ -63,7 +65,7 @@ describe('StockModule (e2e)', () => {
     `;
 
     it('returns stock by id', async () => {
-      const response = await gqlRequest(app, queryStock, {
+      const response = await helper.gqlRequest(queryStock, {
         id: Consts.ALZR11_ID,
       });
 
@@ -80,7 +82,7 @@ describe('StockModule (e2e)', () => {
     });
 
     it('throws error if stock not found', async () => {
-      const response = await gqlRequest(app, queryStock, {
+      const response = await helper.gqlRequest(queryStock, {
         id: '670748530b188ce295c22928', // unexisting id
       });
 
@@ -113,7 +115,7 @@ describe('StockModule (e2e)', () => {
       `;
 
       it('returns last known price', async () => {
-        const response = await gqlRequest(app, queryStockPrice, {
+        const response = await helper.gqlRequest(queryStockPrice, {
           id: Consts.ALZR11_ID,
         });
 
@@ -134,7 +136,7 @@ describe('StockModule (e2e)', () => {
 
       it('returns null if stock has no price history', async () => {
         // Based on the seed provided, KNCR11 has no price history
-        const response = await gqlRequest(app, queryStockPrice, {
+        const response = await helper.gqlRequest(queryStockPrice, {
           id: Consts.KNCR11_ID,
         });
 
@@ -179,7 +181,7 @@ describe('StockModule (e2e)', () => {
           { period: TimeInterval.FIVE_YEARS, date: subYears(mockedDate, 5) },
           { period: TimeInterval.MAX, date: new Date(0) },
         ])('$period', async ({ period, date }) => {
-          const response = await gqlRequest(app, queryStockPriceHistory, {
+          const response = await helper.gqlRequest(queryStockPriceHistory, {
             id: Consts.HGLG11_ID,
             period,
           });
@@ -204,7 +206,7 @@ describe('StockModule (e2e)', () => {
 
       it('returns at most 300 items', async () => {
         // Based on the seed, HGLG11 has data starting at 2011-04-19 totaling 3205 records.
-        const response = await gqlRequest(app, queryStockPriceHistory, {
+        const response = await helper.gqlRequest(queryStockPriceHistory, {
           id: Consts.HGLG11_ID,
           period: TimeInterval.ONE_MONTH,
         });
@@ -216,7 +218,7 @@ describe('StockModule (e2e)', () => {
 
       describe('returns a sample from the list when the limit is reached', () => {
         it('includes the earliest record', async () => {
-          const response = await gqlRequest(app, queryStockPriceHistory, {
+          const response = await helper.gqlRequest(queryStockPriceHistory, {
             id: Consts.HGLG11_ID,
             period: TimeInterval.ONE_MONTH,
           });
@@ -236,7 +238,7 @@ describe('StockModule (e2e)', () => {
         });
 
         it('includes the oldest record', async () => {
-          const response = await gqlRequest(app, queryStockPriceHistory, {
+          const response = await helper.gqlRequest(queryStockPriceHistory, {
             id: Consts.HGLG11_ID,
             period: TimeInterval.ONE_MONTH,
           });
@@ -322,7 +324,7 @@ describe('StockModule (e2e)', () => {
         ])(
           '$groupBy',
           async ({ cursor, groupBy, measureWith, expectedValue }) => {
-            const response = await gqlRequest(app, queryStockPriceHistory, {
+            const response = await helper.gqlRequest(queryStockPriceHistory, {
               id: Consts.HGLG11_ID,
               groupBy,
               cursor,
@@ -342,7 +344,7 @@ describe('StockModule (e2e)', () => {
       });
 
       it('paginates results', async () => {
-        const response1 = await gqlRequest(app, queryStockPriceHistory, {
+        const response1 = await helper.gqlRequest(queryStockPriceHistory, {
           id: Consts.HGLG11_ID,
           groupBy: GroupInterval.DAY,
           cursor: null,
@@ -351,7 +353,7 @@ describe('StockModule (e2e)', () => {
         expect(response1.status).toBe(200);
         const { endCursor } = response1.body.data.stock.prices.pageInfo;
 
-        const response2 = await gqlRequest(app, queryStockPriceHistory, {
+        const response2 = await helper.gqlRequest(queryStockPriceHistory, {
           id: Consts.HGLG11_ID,
           groupBy: GroupInterval.DAY,
           cursor: endCursor,
@@ -394,7 +396,7 @@ describe('StockModule (e2e)', () => {
     });
 
     it('registers a new stock', async () => {
-      const response = await gqlRequest(app, trackStockMutation, {
+      const response = await helper.gqlRequest(trackStockMutation, {
         input: {
           exchange: 'BVMF',
           ticket: 'ZZZZ11',
@@ -418,7 +420,7 @@ describe('StockModule (e2e)', () => {
     });
 
     it('throws error if it already exists', async () => {
-      const response = await gqlRequest(app, trackStockMutation, {
+      const response = await helper.gqlRequest(trackStockMutation, {
         input: {
           exchange: 'BVMF',
           ticket: 'ALZR11',
@@ -438,7 +440,7 @@ describe('StockModule (e2e)', () => {
 
     it('adds stock to tracking list', async () => {
       mockedSpreadsheetsService.trackStock.mockResolvedValue(Promise.resolve());
-      const response = await gqlRequest(app, trackStockMutation, {
+      const response = await helper.gqlRequest(trackStockMutation, {
         input: {
           exchange: 'BVMF',
           ticket: 'XXXX11',

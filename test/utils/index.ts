@@ -5,17 +5,6 @@ import { uniqueId } from 'lodash';
 import { mockedLogService } from 'test/mocks/mocked-log.module';
 import { mockedMailService } from 'test/mocks/mocked-mail.module';
 
-export async function gqlRequest(
-  app: INestApplication,
-  query: string,
-  variables?: Record<string, any>,
-) {
-  return request(app.getHttpServer()).post('/graphql').send({
-    query,
-    variables,
-  });
-}
-
 export const TestHelper = (app: INestApplication) => {
   let accessToken: string | null = null;
   let refreshToken: string | null = null;
