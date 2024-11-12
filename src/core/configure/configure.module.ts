@@ -14,6 +14,13 @@ const getEnvFilePath = () => {
   return isTestEnvironment ? '.env.test.local' : '.env';
 };
 
+const pathToSchemaFile = () => {
+  if (process.env.NODE_ENV === 'test') {
+    return join(process.cwd(), 'src/schema-test.gql');
+  }
+  return join(process.cwd(), 'src/schema.gql');
+};
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -27,7 +34,7 @@ const getEnvFilePath = () => {
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile: pathToSchemaFile(),
     }),
   ],
 })

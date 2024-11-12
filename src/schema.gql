@@ -81,6 +81,9 @@ scalar GroupInterval
 """1m | 1y | 5y | max"""
 scalar TimeInterval
 
+"""Password custom scalar type"""
+scalar Password
+
 type Query {
   loggedUser: User!
   stock(id: ID!): Stock!
@@ -110,12 +113,12 @@ input RegisterUserInput {
 input SetPasswordInput {
   _id: ID!
   secret: String!
-  newPassword: String!
+  newPassword: Password!
 }
 
 input UpdatePasswordInput {
   oldPassword: String!
-  newPassword: String!
+  newPassword: Password!
 }
 
 input ForgotPasswordInput {
