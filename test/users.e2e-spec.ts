@@ -456,6 +456,10 @@ describe('Users (e2e)', () => {
         mockedMailService.expectNoEmailToBeSent();
       });
     });
+
+    describe('protected operation', () => {
+      it.todo('access token expired');
+    });
   });
 
   describe('mutation forgotPassword', () => {
