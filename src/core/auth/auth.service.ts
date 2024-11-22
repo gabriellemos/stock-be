@@ -19,27 +19,18 @@ export class AuthService {
     private readonly refreshJwtService: JwtService,
   ) {}
 
-  private formatUser(user: User) {
-    const {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      password: _ignorePassword,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      secret: _ignoreSecret,
-      ...result
-    } = user;
-    return result;
-  }
-
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
     if (user && (await bcrypt.compare(password, user.password))) {
-      return this.formatUser(user);
+      return user;
     }
     return null;
   }
 
   async login(user: User) {
     const refreshToken = await this.refreshTokenService.register(user);
+
+    // TODO: Probably should send an email to the user here
 
     return {
       access_token: this.accessJwtService.sign({
