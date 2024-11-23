@@ -19,7 +19,7 @@ type RefreshTokenResponse {
 }
 
 type LogoutResponse {
-  success: Boolean!
+  user: User!
 }
 
 type PageInfo {

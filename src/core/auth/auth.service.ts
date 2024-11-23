@@ -45,9 +45,10 @@ export class AuthService {
     };
   }
 
-  async logout(user: LoggedUser) {
-    await this.refreshTokenService.deleteToken(user.refreshID);
-    return { success: true };
+  async logout(loggedUser: LoggedUser) {
+    await this.refreshTokenService.deleteToken(loggedUser.refreshID);
+    const user = await this.usersService.findById(loggedUser.userID);
+    return { user };
   }
 
   async refresh(id: string) {

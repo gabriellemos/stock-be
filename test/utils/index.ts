@@ -22,7 +22,11 @@ export const TestHelper = (app: INestApplication) => {
     return requestBuilder.send({ query, variables });
   };
 
-  const loginWith = async (email: string, password: string) => {
+  const loginWith = async (
+    email: string,
+    password: string,
+    options: { storeTokens?: boolean } = {},
+  ) => {
     const loginMutation = `
       mutation LoginWith($input: LoginUserInput!) {
         login(input: $input) {
@@ -32,6 +36,7 @@ export const TestHelper = (app: INestApplication) => {
       }
     `;
 
+    const { storeTokens = true } = options;
     const response = await gqlRequest(loginMutation, {
       input: { email, password },
     });
@@ -40,8 +45,10 @@ export const TestHelper = (app: INestApplication) => {
     mockedLogService.expectNoLogToBeMade();
     mockedMailService.expectNoEmailToBeSent();
 
-    accessToken = response.body.data.login.access_token;
-    refreshToken = response.body.data.login.refresh_token;
+    if (storeTokens) {
+      accessToken = response.body.data.login.access_token;
+      refreshToken = response.body.data.login.refresh_token;
+    }
     return { accessToken, refreshToken };
   };
 

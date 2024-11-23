@@ -1,5 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { addSeconds } from 'date-fns';
+import MockDate from 'mockdate';
 
 import { ConfigureModule } from 'src/core/configure/configure.module';
 import { AuthModule } from 'src/core/auth/auth.module';
@@ -15,6 +17,16 @@ const loginMutation = `
     login(input: $input) {
       access_token
       refresh_token
+      user {
+        _id
+      }
+    }
+  }
+`;
+
+const logoutMutation = `
+  mutation LogoutUser {
+    logout {
       user {
         _id
       }
@@ -122,12 +134,12 @@ describe('Auth (e2e)', () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toStrictEqual({
+          data: null,
           errors: [
             expect.objectContaining({
               message: 'Invalid login or password',
             }),
           ],
-          data: null,
         });
 
         mockedMailService.expectNoEmailToBeSent();
@@ -142,12 +154,12 @@ describe('Auth (e2e)', () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toStrictEqual({
+          data: null,
           errors: [
             expect.objectContaining({
               message: 'Invalid login or password',
             }),
           ],
-          data: null,
         });
 
         mockedMailService.expectNoEmailToBeSent();
@@ -157,11 +169,62 @@ describe('Auth (e2e)', () => {
   });
 
   describe('logout mutation', () => {
-    it.todo('successfull operation');
+    it('successfull operation', async () => {
+      const { user, password } = await helper.registerUserWithPassword();
+      await helper.loginWith(user.email, password, { storeTokens: true });
+
+      const response = await helper.gqlRequest(logoutMutation);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toStrictEqual({
+        data: {
+          logout: {
+            user: { _id: user.id },
+          },
+        },
+      });
+
+      const rejectedResponse = await helper.gqlRequest(logoutMutation);
+
+      expect(rejectedResponse.status).toBe(200);
+      expect(rejectedResponse.body).toStrictEqual({
+        data: null,
+        errors: [expect.objectContaining({ message: 'Invalid token' })],
+      });
+    });
 
     describe('invalid operation', () => {
-      it.todo('access token expired');
-      it.todo('access token not provided');
+      it('access token expired', async () => {
+        const mockedDate = new Date('2024-10-21T19:56:00Z');
+        MockDate.set(mockedDate);
+
+        const { user, password } = await helper.registerUserWithPassword();
+        await helper.loginWith(user.email, password, { storeTokens: true });
+
+        MockDate.set(addSeconds(mockedDate, 60));
+
+        const response = await helper.gqlRequest(logoutMutation);
+        expect(response.status).toBe(200);
+        expect(response.body).toStrictEqual({
+          data: null,
+          errors: [expect.objectContaining({ message: 'Unauthorized' })],
+        });
+
+        MockDate.reset();
+      });
+
+      it('access token not provided', async () => {
+        const { user, password } = await helper.registerUserWithPassword();
+
+        await helper.loginWith(user.email, password, { storeTokens: false });
+        const response = await helper.gqlRequest(logoutMutation);
+
+        expect(response.status).toBe(200);
+        expect(response.body).toStrictEqual({
+          data: null,
+          errors: [expect.objectContaining({ message: 'Unauthorized' })],
+        });
+      });
     });
   });
 
