@@ -9,13 +9,17 @@ export const TestHelper = (app: INestApplication) => {
   let accessToken: string | null = null;
   let refreshToken: string | null = null;
 
-  const gqlRequest = async (query: string, variables?: Record<string, any>) => {
+  const gqlRequest = async (
+    query: string,
+    variables?: Record<string, any>,
+    options?: { token?: string },
+  ) => {
     let requestBuilder = request(app.getHttpServer()).post('/graphql');
 
-    if (accessToken) {
+    if (accessToken || options?.token) {
       requestBuilder = requestBuilder.set(
         'Authorization',
-        `Bearer ${accessToken}`,
+        `Bearer ${options?.token || accessToken}`,
       );
     }
 
