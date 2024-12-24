@@ -10,10 +10,16 @@ type MockedServices = {
   mailService: MockedMailService;
 };
 
+const generateHelperBaseId = () => {
+  // To avoid conflicts between tests, we generate a unique ID for each helper
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+};
+
 export const TestHelper = (
   app: INestApplication,
   mockedServices: MockedServices,
 ) => {
+  const helperId = generateHelperBaseId();
   let accessToken: string | null = null;
   let refreshToken: string | null = null;
 
@@ -94,12 +100,13 @@ export const TestHelper = (
       }
     `;
 
-    const username = uniqueId('user-');
+    const username = uniqueId(`user-${helperId}-`);
     const response = await gqlRequest(registerMutation, {
       input: { name: username, email: `${username}@example.com` },
     });
 
     expect(response.status).toBe(200);
+    expect(response.body.errors).toBeFalsy();
     expect(mockedServices.mailService.confirmSignUp).toHaveBeenCalledTimes(1);
     const [user, secret] =
       mockedServices.mailService.confirmSignUp.mock.calls[0];
