@@ -2,10 +2,18 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { uniqueId } from 'lodash';
 
-import { mockedLogService } from 'test/mocks/mocked-log.module';
-import { mockedMailService } from 'test/mocks/mocked-mail.module';
+import type { MockedLogService } from 'test/mocks/mocked-log.module';
+import type { MockedMailService } from 'test/mocks/mocked-mail.module';
 
-export const TestHelper = (app: INestApplication) => {
+type MockedServices = {
+  logService: MockedLogService;
+  mailService: MockedMailService;
+};
+
+export const TestHelper = (
+  app: INestApplication,
+  mockedServices: MockedServices,
+) => {
   let accessToken: string | null = null;
   let refreshToken: string | null = null;
 
@@ -46,8 +54,8 @@ export const TestHelper = (app: INestApplication) => {
     });
 
     expect(response.status).toBe(200);
-    mockedLogService.expectNoLogToBeMade();
-    mockedMailService.expectNoEmailToBeSent();
+    mockedServices.logService.expectNoLogToBeMade();
+    mockedServices.mailService.expectNoEmailToBeSent();
 
     if (storeTokens) {
       accessToken = response.body.data.login.access_token;
@@ -68,8 +76,8 @@ export const TestHelper = (app: INestApplication) => {
     const response = await gqlRequest(logoutMutation);
 
     expect(response.status).toBe(200);
-    mockedLogService.expectNoLogToBeMade();
-    mockedMailService.expectNoEmailToBeSent();
+    mockedServices.logService.expectNoLogToBeMade();
+    mockedServices.mailService.expectNoEmailToBeSent();
 
     accessToken = null;
     refreshToken = null;
@@ -92,12 +100,13 @@ export const TestHelper = (app: INestApplication) => {
     });
 
     expect(response.status).toBe(200);
-    expect(mockedMailService.confirmSignUp).toHaveBeenCalledTimes(1);
-    const [user, secret] = mockedMailService.confirmSignUp.mock.calls[0];
+    expect(mockedServices.mailService.confirmSignUp).toHaveBeenCalledTimes(1);
+    const [user, secret] =
+      mockedServices.mailService.confirmSignUp.mock.calls[0];
 
     // Reset mocks to avoid issues with tests
-    mockedLogService.mockReset();
-    mockedMailService.mockReset();
+    mockedServices.logService.mockReset();
+    mockedServices.mailService.mockReset();
 
     return { user, secret };
   };
@@ -116,12 +125,12 @@ export const TestHelper = (app: INestApplication) => {
     const response = await gqlRequest(setPasswordMutation, { input });
 
     expect(response.status).toBe(200);
-    expect(mockedLogService.logInfo).toHaveBeenCalledTimes(1);
-    mockedMailService.expectNoEmailToBeSent();
+    expect(mockedServices.logService.logInfo).toHaveBeenCalledTimes(1);
+    mockedServices.mailService.expectNoEmailToBeSent();
 
     // Reset mocks to avoid issues with tests
-    mockedLogService.mockReset();
-    mockedMailService.mockReset();
+    mockedServices.logService.mockReset();
+    mockedServices.mailService.mockReset();
 
     return { user, password };
   };

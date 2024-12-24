@@ -1,24 +1,26 @@
 import { MailService } from 'src/core/mail/mail.service';
 
-type MockType = jest.Mocked<Partial<MailService>> & {
+export type MockedMailService = jest.Mocked<Partial<MailService>> & {
   mockReset: () => void;
   expectNoEmailToBeSent: () => void;
 };
 
-const mockedConfirmSignUp = jest.fn();
-const mockedForgotPassword = jest.fn();
+export const generateMailService: () => MockedMailService = () => {
+  const mockedConfirmSignUp = jest.fn();
+  const mockedForgotPassword = jest.fn();
 
-export const mockedMailService: MockType = {
-  confirmSignUp: mockedConfirmSignUp,
-  forgotPassword: mockedForgotPassword,
+  return {
+    confirmSignUp: mockedConfirmSignUp,
+    forgotPassword: mockedForgotPassword,
 
-  mockReset: () => {
-    mockedConfirmSignUp.mockReset();
-    mockedForgotPassword.mockReset();
-  },
+    mockReset: () => {
+      mockedConfirmSignUp.mockReset();
+      mockedForgotPassword.mockReset();
+    },
 
-  expectNoEmailToBeSent: () => {
-    expect(mockedConfirmSignUp).not.toHaveBeenCalled();
-    expect(mockedForgotPassword).not.toHaveBeenCalled();
-  },
+    expectNoEmailToBeSent: () => {
+      expect(mockedConfirmSignUp).not.toHaveBeenCalled();
+      expect(mockedForgotPassword).not.toHaveBeenCalled();
+    },
+  };
 };

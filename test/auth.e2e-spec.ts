@@ -9,8 +9,8 @@ import { LogService } from 'src/core/log/log.service';
 import { MailService } from 'src/core/mail/mail.service';
 
 import { TestHelper } from 'test/utils';
-import { mockedLogService } from 'test/mocks/mocked-log.module';
-import { mockedMailService } from 'test/mocks/mocked-mail.module';
+import { generateLogService } from 'test/mocks/mocked-log.module';
+import { generateMailService } from 'test/mocks/mocked-mail.module';
 
 const loginMutation = `
   mutation LoginUser($input: LoginUserInput!) {
@@ -42,6 +42,9 @@ const logoutMutation = `
   }
 `;
 
+const mockedLogService = generateLogService();
+const mockedMailService = generateMailService();
+
 describe('Auth (e2e)', () => {
   let helper: ReturnType<typeof TestHelper>;
   let app: INestApplication;
@@ -57,7 +60,10 @@ describe('Auth (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    helper = TestHelper(app);
+    helper = TestHelper(app, {
+      logService: mockedLogService,
+      mailService: mockedMailService,
+    });
     await app.init();
   });
 

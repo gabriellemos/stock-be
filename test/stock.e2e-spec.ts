@@ -22,8 +22,13 @@ import { GroupInterval } from 'src/common/scalars/group-interval.scalar';
 
 import Consts from 'test/utils/conts';
 import { TestHelper } from 'test/utils';
-import { mockedLogService } from 'test/mocks/mocked-log.module';
-import { mockedSpreadsheetsService } from 'test/mocks/mocked-spreadsheets.module';
+import { generateLogService } from 'test/mocks/mocked-log.module';
+import { generateMailService } from 'test/mocks/mocked-mail.module';
+import { generateSpreadsheetsService } from 'test/mocks/mocked-spreadsheets.module';
+
+const mockedLogService = generateLogService();
+const mockedMailService = generateMailService();
+const mockedSpreadsheetsService = generateSpreadsheetsService();
 
 describe('StockModule (e2e)', () => {
   let helper: ReturnType<typeof TestHelper>;
@@ -40,7 +45,10 @@ describe('StockModule (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    helper = TestHelper(app);
+    helper = TestHelper(app, {
+      logService: mockedLogService,
+      mailService: mockedMailService,
+    });
     await app.init();
   });
 
