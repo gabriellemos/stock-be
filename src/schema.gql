@@ -75,6 +75,33 @@ type HistoryItem {
   volume: Float!
 }
 
+type PositionEntry {
+  _id: ID!
+  date: DateTime!
+  quantity: Float!
+  type: String!
+  price: Float!
+}
+
+type Position {
+  _id: ID!
+  open: DateTime!
+  close: DateTime!
+  quantity: Float!
+  averagePrice: Float!
+  isOpen: Boolean!
+  entries: [PositionEntry!]!
+}
+
+type Portfolio {
+  _id: ID!
+  name: String!
+  description: String!
+
+  """Active positions"""
+  positions: [Position!]!
+}
+
 """day | week | month | trimester | semester | year"""
 scalar GroupInterval
 
@@ -84,9 +111,13 @@ scalar TimeInterval
 """Password custom scalar type"""
 scalar Password
 
+"""Buy | Sell | Split | Grouping | Subscription | Bonus Issue"""
+scalar OrderType
+
 type Query {
   loggedUser: User!
   stock(id: ID!): Stock!
+  portfolio(id: ID!): Portfolio!
 }
 
 type Mutation {

@@ -4,8 +4,15 @@ import { CommonModule } from './common/common.module';
 import { ConfigureModule } from './core/configure/configure.module';
 import { AuthModule } from './core/auth/auth.module';
 import { StockModule } from './project/stock/stock.module';
+import { PortfolioModule } from './project/portfolio/portfolio.module';
 
 @Module({
-  imports: [CommonModule, ConfigureModule, AuthModule, StockModule],
+  imports: [
+    CommonModule,
+    ConfigureModule,
+    AuthModule,
+    StockModule,
+    PortfolioModule,
+  ],
 })
 export class AppModule {}
