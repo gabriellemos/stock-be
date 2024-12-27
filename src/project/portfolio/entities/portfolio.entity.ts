@@ -14,13 +14,14 @@ export class Portfolio extends BaseEntity {
   @Prop({ required: true })
   name: string;
 
-  @Field()
-  @Prop({ required: true })
-  description: string;
+  @Field({ nullable: true })
+  @Prop()
+  description?: string;
 
   @Field(() => [Position], { description: 'Active positions' })
   positions: Position[];
 
+  @Field(() => User)
   @Prop({
     ref: 'User',
     required: true,

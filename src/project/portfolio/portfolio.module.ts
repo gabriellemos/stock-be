@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { LogModule } from 'src/core/log/log.module';
+import { UsersModule } from 'src/core/users/users.module';
 
 import { Portfolio, PortfolioSchema } from './entities/portfolio.entity';
 import {
@@ -16,6 +17,7 @@ import { OrderTypeScalar } from './scalars/order-type.scalar';
 @Module({
   imports: [
     LogModule,
+    UsersModule,
     MongooseModule.forFeature([
       { name: Portfolio.name, schema: PortfolioSchema },
       { name: PositionEntry.name, schema: PositionEntrySchema },

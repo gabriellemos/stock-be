@@ -4,6 +4,7 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 import { LoggedUser } from 'src/core/auth/dto/logged-user';
 
 import { PortfolioService } from '../portfolio.service';
+import { Types as MongooseTypes } from 'mongoose';
 
 @Injectable()
 export class PortfolioOwnershipGuard implements CanActivate {
@@ -14,7 +15,18 @@ export class PortfolioOwnershipGuard implements CanActivate {
     const user = ctx.getContext().req.user as LoggedUser;
     const args = ctx.getArgs();
 
-    const portfolio = await this.portfolioService.findById(args.id);
-    return portfolio && portfolio.owner.id === user.userID;
+    const id = args.id || args.input._id;
+    const portfolio = await this.portfolioService.findById(id);
+
+    if (!portfolio) {
+      return false;
+    }
+
+    const ownerId =
+      portfolio.owner instanceof MongooseTypes.ObjectId
+        ? portfolio.owner.toString()
+        : portfolio.owner.id;
+
+    return ownerId === user.userID;
   }
 }

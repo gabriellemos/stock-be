@@ -96,10 +96,11 @@ type Position {
 type Portfolio {
   _id: ID!
   name: String!
-  description: String!
+  description: String
 
   """Active positions"""
   positions: [Position!]!
+  owner: User!
 }
 
 """day | week | month | trimester | semester | year"""
@@ -118,6 +119,7 @@ type Query {
   loggedUser: User!
   stock(id: ID!): Stock!
   portfolio(id: ID!): Portfolio!
+  myPortfolios: [Portfolio!]!
 }
 
 type Mutation {
@@ -129,6 +131,9 @@ type Mutation {
   updatePassword(input: UpdatePasswordInput!): User!
   forgotPassword(input: ForgotPasswordInput!): User!
   trackStock(input: TrackStockInput!): Stock!
+  createPortfolio(input: CreatePortfolioInput!): Portfolio!
+  updatePortfolio(input: UpdatePortfolioInput!): Portfolio!
+  deletePortfolio(input: DeletePortfolioInput!): Portfolio!
 }
 
 input LoginUserInput {
@@ -159,4 +164,19 @@ input ForgotPasswordInput {
 input TrackStockInput {
   exchange: String!
   ticket: String!
+}
+
+input CreatePortfolioInput {
+  name: String!
+  description: String
+}
+
+input UpdatePortfolioInput {
+  name: String
+  description: String
+  _id: String!
+}
+
+input DeletePortfolioInput {
+  _id: String!
 }
