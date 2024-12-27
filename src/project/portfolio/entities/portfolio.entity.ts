@@ -1,10 +1,11 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Schema as MongoSchema } from 'mongoose';
 
 import { BaseEntity } from 'src/common/entities/base.entity';
 
 import { Position } from './position.entity';
+import { User } from 'src/core/users/entities/user.entity';
 
 @Schema()
 @ObjectType()
@@ -19,6 +20,13 @@ export class Portfolio extends BaseEntity {
 
   @Field(() => [Position], { description: 'Active positions' })
   positions: Position[];
+
+  @Prop({
+    ref: 'User',
+    required: true,
+    type: MongoSchema.Types.ObjectId,
+  })
+  owner: User;
 }
 
 export const PortfolioSchema = SchemaFactory.createForClass(Portfolio);
