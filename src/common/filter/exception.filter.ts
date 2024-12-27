@@ -8,12 +8,23 @@ export class ExceptionFilter implements GqlExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
     // TODO: Log original error
 
+    if (exception.name === 'ValidationError') {
+      return new GraphQLError('Validation Error', {
+        extensions: {
+          code: 'BAD_USER_INPUT',
+          exception: Object.values(exception.errors).map(
+            (error: any) => error.properties,
+          ),
+        },
+      });
+    }
+
     if (exception.name === 'CastError' && exception.kind === 'ObjectId') {
       const message = `Invalid ID format: ${exception.value}`;
       return new GraphQLError(message, {
         extensions: {
           code: 'BAD_USER_INPUT',
-          exception: { message },
+          exception: [{ message }],
         },
       });
     }
@@ -22,7 +33,7 @@ export class ExceptionFilter implements GqlExceptionFilter {
     return new GraphQLError(message, {
       extensions: {
         code: 'INTERNAL_SERVER_ERROR',
-        exception: { message },
+        exception: [{ message }],
       },
     });
   }

@@ -35,6 +35,7 @@ const pathToSchemaFile = () => {
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: pathToSchemaFile(),
+      includeStacktraceInErrorResponses: false,
     }),
   ],
 })
