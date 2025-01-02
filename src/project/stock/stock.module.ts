@@ -19,5 +19,6 @@ import { StockService } from './stock.service';
     ]),
   ],
   providers: [StockResolver, StockService],
+  exports: [StockService],
 })
 export class StockModule {}

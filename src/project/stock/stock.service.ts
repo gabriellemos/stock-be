@@ -164,7 +164,7 @@ export class StockService {
     }
   }
 
-  async findOne(id: string) {
+  async findById(id: string) {
     return await this.stockModel.findById(id).exec();
   }
 

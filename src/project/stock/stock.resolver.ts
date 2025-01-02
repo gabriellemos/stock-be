@@ -24,7 +24,7 @@ export class StockResolver {
 
   @Query(() => Stock, { name: 'stock' })
   async findOne(@Args('id', { type: () => ID }) id: string) {
-    const stock = await this.stockService.findOne(id);
+    const stock = await this.stockService.findById(id);
 
     if (!stock) {
       throw new Error(`Stock with id ${id} not found`);
