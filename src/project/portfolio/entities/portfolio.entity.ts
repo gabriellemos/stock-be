@@ -3,9 +3,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Model, Schema as MongoSchema } from 'mongoose';
 
 import { BaseEntity } from 'src/common/entities/base.entity';
+import { User } from 'src/core/users/entities/user.entity';
 
 import { Position } from './position.entity';
-import { User } from 'src/core/users/entities/user.entity';
+import { Entry } from './entry.entity';
 
 @Schema()
 @ObjectType()
@@ -17,6 +18,9 @@ export class Portfolio extends BaseEntity {
   @Field({ nullable: true })
   @Prop()
   description?: string;
+
+  @Field(() => [Entry])
+  entries: Entry[];
 
   @Field(() => [Position], { description: 'Active positions' })
   positions: Position[];

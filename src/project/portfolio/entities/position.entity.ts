@@ -5,8 +5,8 @@ import { Model, Schema as MongoSchema } from 'mongoose';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { Stock } from 'src/project/stock/entities/stock.entity';
 
+import { Entry } from './entry.entity';
 import { Portfolio } from './portfolio.entity';
-import { PositionEntry } from './position-entry.entity';
 
 @Schema()
 @ObjectType()
@@ -53,8 +53,8 @@ export class Position extends BaseEntity {
   })
   portfolio: Portfolio;
 
-  @Field(() => [PositionEntry])
-  entries: PositionEntry[];
+  @Field(() => [Entry])
+  entries: Entry[];
 }
 
 export const PositionSchema = SchemaFactory.createForClass(Position);

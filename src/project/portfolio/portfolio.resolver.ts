@@ -1,6 +1,7 @@
 import { UseGuards } from '@nestjs/common';
 import {
   Args,
+  GraphQLISODateTime,
   ID,
   Mutation,
   Parent,
@@ -17,12 +18,13 @@ import { User } from 'src/core/users/entities/user.entity';
 import { UsersService } from 'src/core/users/users.service';
 
 import { PortfolioOwnershipGuard } from './guard/portfolio-ownership.guard';
-import { Portfolio } from './entities/portfolio.entity';
 import { PortfolioService } from './portfolio.service';
 import { CreatePortfolioInput } from './dto/create-portfolio.input';
 import { UpdatePortfolioInput } from './dto/update-portfolio.input';
 import { DeletePortfolioInput } from './dto/delete-portfolio.input';
+import { Portfolio } from './entities/portfolio.entity';
 import { Position } from './entities/position.entity';
+import { Entry } from './entities/entry.entity';
 
 @Resolver(() => Portfolio)
 export class PortfolioResolver {
@@ -62,6 +64,11 @@ export class PortfolioResolver {
   @UseGuards(JwtAccessAuthGuard, PortfolioOwnershipGuard)
   async deletePortfolio(@Args('input') input: DeletePortfolioInput) {
     return await this.portfolioService.update(input);
+  }
+
+  @ResolveField(() => [Entry])
+  async entries(@Parent() portfolio: Portfolio) {
+    return [];
   }
 
   @ResolveField(() => [Position])

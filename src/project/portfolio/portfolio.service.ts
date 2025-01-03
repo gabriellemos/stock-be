@@ -6,8 +6,6 @@ import { LogService } from 'src/core/log/log.service';
 import { UsersService } from 'src/core/users/users.service';
 
 import { Portfolio } from './entities/portfolio.entity';
-import { PositionEntry } from './entities/position-entry.entity';
-import { Position } from './entities/position.entity';
 import { CreatePortfolioInput } from './dto/create-portfolio.input';
 import { UpdatePortfolioInput } from './dto/update-portfolio.input';
 import { DeletePortfolioInput } from './dto/delete-portfolio.input';
@@ -19,9 +17,6 @@ export class PortfolioService {
     @Inject() private readonly usersService: UsersService,
     @InjectConnection() private readonly connection: Connection,
     @InjectModel(Portfolio.name) private portfolioModel: Model<Portfolio>,
-    @InjectModel(PositionEntry.name)
-    private positionEntryModel: Model<PositionEntry>,
-    @InjectModel(Position.name) private positionModel: Model<Position>,
   ) {}
 
   async findById(id: string) {

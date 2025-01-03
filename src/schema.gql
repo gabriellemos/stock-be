@@ -75,12 +75,15 @@ type HistoryItem {
   volume: Float!
 }
 
-type PositionEntry {
+type Portfolio {
   _id: ID!
-  date: DateTime!
-  quantity: Float!
-  type: String!
-  price: Float!
+  name: String!
+  description: String
+  entries: [Entry!]!
+
+  """Active positions"""
+  positions: [Position!]!
+  owner: User!
 }
 
 type Position {
@@ -90,17 +93,15 @@ type Position {
   quantity: Float!
   averagePrice: Float!
   isOpen: Boolean!
-  entries: [PositionEntry!]!
+  entries: [Entry!]!
 }
 
-type Portfolio {
+type Entry {
   _id: ID!
-  name: String!
-  description: String
-
-  """Active positions"""
-  positions: [Position!]!
-  owner: User!
+  date: DateTime!
+  quantity: Float!
+  type: OrderType!
+  price: Float!
 }
 
 """day | week | month | trimester | semester | year"""
@@ -120,6 +121,7 @@ type Query {
   stock(id: ID!): Stock!
   portfolio(id: ID!): Portfolio!
   myPortfolios: [Portfolio!]!
+  position(id: ID!): Position!
 }
 
 type Mutation {
@@ -134,6 +136,8 @@ type Mutation {
   createPortfolio(input: CreatePortfolioInput!): Portfolio!
   updatePortfolio(input: UpdatePortfolioInput!): Portfolio!
   deletePortfolio(input: DeletePortfolioInput!): Portfolio!
+  registerEntry(input: CreateEntryInput!): Position!
+  deleteEntry(input: DeleteEntryInput!): Position!
 }
 
 input LoginUserInput {
@@ -179,4 +183,17 @@ input UpdatePortfolioInput {
 
 input DeletePortfolioInput {
   _id: String!
+}
+
+input CreateEntryInput {
+  date: DateTime!
+  quantity: Int!
+  type: OrderType!
+  price: Float!
+  portfolioId: ID!
+  stockId: ID!
+}
+
+input DeleteEntryInput {
+  _id: ID!
 }
